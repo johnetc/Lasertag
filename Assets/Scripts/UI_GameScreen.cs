@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
@@ -25,8 +26,8 @@ public class UI_GameScreen  {
     private GameObject m_GamePageContainer;
 
     private GameObject m_GamePagePrefab;
-
-    private Dictionary<string , PanelData> m_TouchPanelDict = new Dictionary<string , PanelData> ();
+    private GameObject m_ParticlePrefab;
+    //private Dictionary<string , PanelData> m_TouchPanelDict = new Dictionary<string , PanelData> ();
     private Dictionary<TouchLocation, GameObject> m_ParticleDict = new Dictionary<TouchLocation, GameObject>(); 
     private List<GameObject> ActiveParticles = new List<GameObject>(); 
 
@@ -67,7 +68,7 @@ public class UI_GameScreen  {
         foreach (var button in tempScript.ButtonList)
         {
             PanelData tempPanel = new PanelData();
-            m_TouchPanelDict.Add ( button.name , tempPanel );
+            //m_TouchPanelDict.Add ( button.name , tempPanel );
             tempPanel.PanelButton = button;
             switch ( button.name )
             {
@@ -95,9 +96,34 @@ public class UI_GameScreen  {
 
             AddListenerToButton ( tempPanel );
         }
-        
-        m_ParticleDict.Add(TouchLocation.Right, Resources.Load<GameObject>("Particles/RightParticleSystem"));
+
+        m_ParticlePrefab = Resources.Load<GameObject>("Particles/ParticleSystem");
+        //ParticleSystem tempPart = tempGameObj.GetComponent<ParticleSystem>();
+        //tempPart = SetParticleVelocity(tempPart, Vector3.left);
+        //m_ParticleDict.Add(TouchLocation.Right, tempGameObj);
+        //tempPart = SetParticleVelocity ( tempPart , Vector3.right );
+        //m_ParticleDict.Add ( TouchLocation.Left , tempGameObj );
+        //tempPart = SetParticleVelocity ( tempPart , Vector3.up );
+        //m_ParticleDict.Add ( TouchLocation.Bottom , tempGameObj );
+        //tempPart = SetParticleVelocity ( tempPart , Vector3.down );
+        //m_ParticleDict.Add ( TouchLocation.Top , tempGameObj );
     }
+
+    //private ParticleSystem SetParticleVelocity(ParticleSystem partSys, Vector3 velocity)
+    //{
+    //    //part
+        
+    //    ParticleSystem.Particle [] p = new ParticleSystem.Particle [ 3 ];
+
+    //    for (int i=0; i < p.Length; i++)
+    //    {
+    //        p[i].velocity = velocity*100;
+    //        Debug.Log(p[i].velocity);
+    //    }
+    //    Debug.Log("done");
+    //    partSys.SetParticles(p, p.Length);
+    //    return partSys;
+    //}
 
     private void AddListenerToButton ( PanelData panel )
     {
@@ -109,32 +135,38 @@ public class UI_GameScreen  {
     private void PanelTouched ( PanelData panel )
     {
         //Debug.Log("Panel "+panel.PanelLoc+ " " + Input.mousePosition);
+        GameObject newParticle = GameObject.Instantiate(m_ParticlePrefab);
+        ParticleSystem tempSys = newParticle.GetComponent<ParticleSystem>();
+        ActiveParticles.Add ( newParticle );
+        newParticle.transform.SetParent ( SceneManager.Instance.MainCamera.transform );
+        newParticle.transform.position = SceneManager.Instance.MainCamera.ScreenToWorldPoint ( new Vector3 ( Input.mousePosition.x , Input.mousePosition.y , 100 ) );
+        newParticle.GetComponent<ParticleColliderMono> ().thisLocation = TouchLocation.Right;
+
         switch (panel.PanelLoc)
         {
             case TouchLocation.Left:
             {
-                
+                tempSys.Emit(tempSys.transform.position, Vector3.right*100, 10f, 10, Color.red);
                 break;
             }
             case TouchLocation.Right:
             {
-                GameObject newParticle = ( GameObject ) GameObject.Instantiate ( m_ParticleDict [ TouchLocation.Right ] );
-                ActiveParticles.Add(newParticle);
-                newParticle.transform.SetParent(SceneManager.Instance.MainCamera.transform);
-                newParticle.transform.position = SceneManager.Instance.MainCamera.ScreenToWorldPoint ( new Vector3 ( Input.mousePosition.x , Input.mousePosition.y, 100 ) );
-                newParticle.GetComponent<ParticleColliderMono>().thisLocation = TouchLocation.Right;
+                tempSys.Emit ( tempSys.transform.position , Vector3.left * 100 , 10f , 10 , Color.red );
                 break;
             }
             case TouchLocation.Top:
             {
+                tempSys.Emit ( tempSys.transform.position , Vector3.down * 100 , 10f , 10 , Color.red );
                 break;
             }
             case TouchLocation.Bottom:
             {
+                tempSys.Emit ( tempSys.transform.position , Vector3.up * 100 , 10f , 10 , Color.red );
                 break;
             }
 
         }
+        
     }
 
     public void ColliderResult()
