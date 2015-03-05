@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Xml.Serialization;
+using UnityEngine;
 using System.Collections;
 
 public class ParticleColliderMono : MonoBehaviour
@@ -6,7 +7,12 @@ public class ParticleColliderMono : MonoBehaviour
 
     public UI_GameScreen.TouchLocation thisLocation;
     private ParticleCollisionEvent [] collisionEvents = new ParticleCollisionEvent [ 16 ];
-    
+
+    public void Update()
+    {
+        
+    }
+
     public void OnParticleCollision(GameObject other)
     {
         ParticleSystem particleSystem;
@@ -22,9 +28,13 @@ public class ParticleColliderMono : MonoBehaviour
             if ( other.GetComponent<Rigidbody>() )
             {
                 Vector3 pos = collisionEvents [ i ].intersection;
+                //Debug.Log ( other.transform.position + " " + collisionEvents [ i ].intersection );
                 Vector3 force = collisionEvents [ i ].velocity * 1;
-                other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
-                Destroy(this.gameObject);
+                //other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
+                other.GetComponent<Rigidbody> ().AddForce ( force  );
+                //Debug.Log("Hit from the... "+thisLocation);
+                //Debug.Log(collisionEvents[i].collider.name);
+                //Destroy(this.gameObject);
             }
             i++;
         }

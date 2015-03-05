@@ -37,5 +37,6 @@ public class SceneManager  {
     public void Update ()
     {
         MenuMasterControl.Instance.Update();
+        UI_GameScreen.Instance.Update();
     }
 }

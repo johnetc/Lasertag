@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Timers;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public class UI_GameScreen  {
 
@@ -29,13 +32,29 @@ public class UI_GameScreen  {
     private GameObject m_ParticlePrefab;
     //private Dictionary<string , PanelData> m_TouchPanelDict = new Dictionary<string , PanelData> ();
     private Dictionary<TouchLocation, GameObject> m_ParticleDict = new Dictionary<TouchLocation, GameObject>(); 
-    private List<GameObject> ActiveParticles = new List<GameObject>(); 
-
+    private List<ParticleSystem.Particle> ActiveParticles = new List<ParticleSystem.Particle>();
+    private Vector3 TopLeft;
+    private Vector3 BottomRight;
     private class PanelData
     {
         public Button PanelButton;
         public TouchLocation PanelLoc;
     }
+
+    private class ParticleBurst
+    {
+        public int LeftToFire;
+        public int TotalToFire;
+        public int DeadParticles;
+        public ParticleSystem ThisSystem;
+        public ParticleSystem.Particle[] TheseParticles;
+        public Stopwatch StopW = new Stopwatch();
+        public bool Started;
+        public bool ReadyForDisposal;
+    }
+
+    private List<ParticleBurst> m_ActiveParticleBursts = new List<ParticleBurst>();
+    private List<ParticleBurst> m_SpentParticleBursts = new List<ParticleBurst> (); 
 
     public enum TouchLocation
     {
@@ -43,6 +62,13 @@ public class UI_GameScreen  {
         Left,
         Bottom,
         Right,
+    }
+
+    public void Update()
+    {
+        FireScheduledParticles();
+        CheckParticleSystemDisposal();
+        CheckForDeadParticles();
     }
 
     public void LoadUIAssets ()
@@ -65,10 +91,13 @@ public class UI_GameScreen  {
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
+        TopLeft = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 0 , 1 , SceneManager.Instance.MainCamera.nearClipPlane ) ) ;
+        BottomRight = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 1 , 0 , SceneManager.Instance.MainCamera.nearClipPlane ) );
+        
         foreach (var button in tempScript.ButtonList)
         {
             PanelData tempPanel = new PanelData();
-            //m_TouchPanelDict.Add ( button.name , tempPanel );
+           
             tempPanel.PanelButton = button;
             switch ( button.name )
             {
@@ -96,35 +125,8 @@ public class UI_GameScreen  {
 
             AddListenerToButton ( tempPanel );
         }
-
         m_ParticlePrefab = Resources.Load<GameObject>("Particles/ParticleSystem");
-        //ParticleSystem tempPart = tempGameObj.GetComponent<ParticleSystem>();
-        //tempPart = SetParticleVelocity(tempPart, Vector3.left);
-        //m_ParticleDict.Add(TouchLocation.Right, tempGameObj);
-        //tempPart = SetParticleVelocity ( tempPart , Vector3.right );
-        //m_ParticleDict.Add ( TouchLocation.Left , tempGameObj );
-        //tempPart = SetParticleVelocity ( tempPart , Vector3.up );
-        //m_ParticleDict.Add ( TouchLocation.Bottom , tempGameObj );
-        //tempPart = SetParticleVelocity ( tempPart , Vector3.down );
-        //m_ParticleDict.Add ( TouchLocation.Top , tempGameObj );
     }
-
-    //private ParticleSystem SetParticleVelocity(ParticleSystem partSys, Vector3 velocity)
-    //{
-    //    //part
-        
-    //    ParticleSystem.Particle [] p = new ParticleSystem.Particle [ 3 ];
-
-    //    for (int i=0; i < p.Length; i++)
-    //    {
-    //        p[i].velocity = velocity*100;
-    //        Debug.Log(p[i].velocity);
-    //    }
-    //    Debug.Log("done");
-    //    partSys.SetParticles(p, p.Length);
-    //    return partSys;
-    //}
-
     private void AddListenerToButton ( PanelData panel )
     {
         panel.PanelButton.onClick.RemoveAllListeners ();
@@ -134,39 +136,167 @@ public class UI_GameScreen  {
 
     private void PanelTouched ( PanelData panel )
     {
-        //Debug.Log("Panel "+panel.PanelLoc+ " " + Input.mousePosition);
+        
         GameObject newParticle = GameObject.Instantiate(m_ParticlePrefab);
-        ParticleSystem tempSys = newParticle.GetComponent<ParticleSystem>();
-        ActiveParticles.Add ( newParticle );
+
         newParticle.transform.SetParent ( SceneManager.Instance.MainCamera.transform );
+
         newParticle.transform.position = SceneManager.Instance.MainCamera.ScreenToWorldPoint ( new Vector3 ( Input.mousePosition.x , Input.mousePosition.y , 100 ) );
-        newParticle.GetComponent<ParticleColliderMono> ().thisLocation = TouchLocation.Right;
+
+        ParticleSystem tempSys = newParticle.GetComponent<ParticleSystem> ();
+
+        ParticleBurst tempBurst = new ParticleBurst ();
+
+        tempBurst.ThisSystem = tempSys;
+
+        ParticleSystem.Particle[] tempPart = new ParticleSystem.Particle[GameData.NumberOfParticlesPerShot];
+
+        tempBurst.LeftToFire = tempPart.Count()-1;
+        tempBurst.TotalToFire = tempBurst.LeftToFire;
 
         switch (panel.PanelLoc)
         {
             case TouchLocation.Left:
             {
-                tempSys.Emit(tempSys.transform.position, Vector3.right*100, 10f, 10, Color.red);
+                tempPart = ParticleDefiner(tempSys.transform.position, Vector3.right*GameData.ShotParticleVelocityMult, GameData.ShotParticleSize, GameData.ShotParticleLifetime, GameData.ShotParticleColour);
+               
+                newParticle.GetComponent<ParticleColliderMono> ().thisLocation = TouchLocation.Left;
                 break;
             }
             case TouchLocation.Right:
             {
-                tempSys.Emit ( tempSys.transform.position , Vector3.left * 100 , 10f , 10 , Color.red );
+                tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.left * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+               
+                newParticle.GetComponent<ParticleColliderMono> ().thisLocation = TouchLocation.Right;
                 break;
             }
             case TouchLocation.Top:
             {
-                tempSys.Emit ( tempSys.transform.position , Vector3.down * 100 , 10f , 10 , Color.red );
+                tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.down * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+                
+                newParticle.GetComponent<ParticleColliderMono> ().thisLocation = TouchLocation.Top;
                 break;
             }
             case TouchLocation.Bottom:
             {
-                tempSys.Emit ( tempSys.transform.position , Vector3.up * 100 , 10f , 10 , Color.red );
+                tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.up * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+                
+                newParticle.GetComponent<ParticleColliderMono> ().thisLocation = TouchLocation.Bottom;
                 break;
             }
 
         }
+        tempSys.Emit(tempPart[0]);
+        tempBurst.TheseParticles = tempPart;
+        m_ActiveParticleBursts.Add(tempBurst);
+    }
+
+    private void ParticleSystemHijack(ParticleSystem partSys)
+    {
+        ParticleSystem.Particle[] particles = new ParticleSystem.Particle[partSys.maxParticles];
+        var partNumber = partSys.GetParticles(particles);
+
+        Debug.Log(particles[0].velocity);
+        Debug.Log ( particles [ 0 ].lifetime );
+        Debug.Log ( particles [ 0 ].startLifetime );
         
+    }
+
+    private ParticleSystem.Particle[] ParticleDefiner( Vector3 pos, Vector3 vel, float size, float life, Color32 colour)
+    {
+        ParticleSystem.Particle[] particles = new ParticleSystem.Particle[GameData.NumberOfParticlesPerShot];
+
+        for (int i = 0; i < particles.Count(); i++)
+        {
+            particles[i].position = pos;
+            particles[i].velocity = vel;
+            particles [ i ].size = size;
+            particles [ i ].lifetime = life;
+            particles [ i ].startLifetime = life;
+            particles [ i ].color = colour;
+        }
+        
+        return particles;
+    }
+
+    private void FireScheduledParticles()
+    {
+        foreach ( var particle in m_ActiveParticleBursts )
+        {
+            if (!particle.Started)
+            {
+                particle.StopW.Start();
+            }
+        }
+
+        foreach (var mParticleBurst in m_ActiveParticleBursts)
+        {
+            //Debug.Log(mParticleBurst.StopW.ElapsedMilliseconds);
+            if (mParticleBurst.StopW.ElapsedMilliseconds > GameData.ParticleShotIntervalMS && mParticleBurst.LeftToFire > 0)
+            {
+                mParticleBurst.StopW.Reset();
+                mParticleBurst.StopW.Start();
+                mParticleBurst.ThisSystem.Emit(mParticleBurst.TheseParticles[mParticleBurst.TotalToFire - mParticleBurst.LeftToFire+1]);
+                mParticleBurst.LeftToFire --;
+            }
+            if (mParticleBurst.LeftToFire == 0)
+            {
+                mParticleBurst.StopW.Stop();
+                //mParticleBurst.ReadyForDisposal = true;
+            }
+        }
+
+    }
+
+    private void CheckParticleSystemDisposal()
+    {
+        for ( int i = m_ActiveParticleBursts.Count-1; i > -1; i-- )
+        {
+            if ( m_ActiveParticleBursts [ i ].DeadParticles > m_ActiveParticleBursts[i].TotalToFire )
+            {
+                //m_SpentParticleBursts.Add ( m_ActiveParticleBursts [ i ] );
+                m_ActiveParticleBursts[i].ThisSystem.gameObject.SetActive(false);
+                m_ActiveParticleBursts.Remove(m_ActiveParticleBursts[i]);
+            }
+        }
+    }
+
+    private void CheckForDeadParticles()
+    {
+        foreach (var mActiveParticleBurst in m_ActiveParticleBursts)
+        {
+            ParticleSystem.Particle [] part = new ParticleSystem.Particle [ mActiveParticleBurst.ThisSystem.maxParticles];
+            var partNo = mActiveParticleBurst.ThisSystem.GetParticles(part);
+            for ( int i = 0; i < partNo; i++ )
+            {
+                
+                if (CheckParticleStats(part[i]))
+                {
+                    part[i].lifetime = 0;
+                    mActiveParticleBurst.DeadParticles++;
+                }
+            }
+            mActiveParticleBurst.ThisSystem.SetParticles ( part , partNo );
+        }
+        
+    }
+
+    private bool CheckParticleStats(ParticleSystem.Particle particle)
+    {
+        if ( particle.velocity == Vector3.zero )
+        {
+            return true;
+        }
+        if ( particle.position.x > BottomRight.x || particle.position.x < TopLeft.x )
+        {
+            return true;
+        }
+        if ( particle.position.y > TopLeft.y || particle.position.y < BottomRight.y )
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public void ColliderResult()
