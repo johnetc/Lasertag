@@ -7,13 +7,13 @@ using System.Collections;
 using UnityEngine.UI;
 using Debug = UnityEngine.Debug;
 
-public class UI_GameScreen  {
+public class GameScreen  {
 
     #region singleton
 
-    private static readonly UI_GameScreen instance = new UI_GameScreen ();
+    private static readonly GameScreen instance = new GameScreen ();
 
-    public static UI_GameScreen Instance
+    public static GameScreen Instance
     {
         get
         {
@@ -27,15 +27,14 @@ public class UI_GameScreen  {
     public MenuMasterControl.MasterMenuDelegate InitiateUIDel;
 
     private GameObject m_GamePageContainer;
-
     private GameObject m_GamePagePrefab;
-    private GameObject m_ParticlePrefab;
 
     private ParticleManager m_ParticleManager;
+    private EnemyManager m_EnemyManager;
     
-    private List<ParticleSystem.Particle> ActiveParticles = new List<ParticleSystem.Particle>();
     public Vector3 TopLeft;
     public Vector3 BottomRight;
+
     public class PanelData
     {
         public Button PanelButton;
@@ -53,6 +52,9 @@ public class UI_GameScreen  {
     public void Update()
     {
         m_ParticleManager.Update();
+        m_EnemyManager.CheckObjectExistence();
+        m_EnemyManager.CheckObjectCreation();
+        m_EnemyManager.ObjectMovement();
     }
 
     public void LoadUIAssets ()
@@ -72,7 +74,7 @@ public class UI_GameScreen  {
         LoadPrefabVariables ( tempScript );
 
         m_ParticleManager = new ParticleManager();
-
+        m_EnemyManager = new EnemyManager();
     }
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
@@ -121,7 +123,6 @@ public class UI_GameScreen  {
     private void PanelTouched ( PanelData panel )
     {
         m_ParticleManager.NewShotSystem(panel);
-       
     }
    
     public void ColliderResult()

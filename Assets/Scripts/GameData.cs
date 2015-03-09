@@ -10,4 +10,5 @@ public class GameData
     public static Color32 ShotParticleColour = new Color32(255,255,255,255);
     public static int NumberOfParticlesPerShot = 3;
     public static float ParticleShotIntervalMS = 2000;
+    public static float ObjectCreationIntervalMS = 3000;
 }

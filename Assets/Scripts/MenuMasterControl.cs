@@ -37,12 +37,12 @@ public class MenuMasterControl {
     public void LoadPageAssets()
     {
         MenuContainer = new GameObject("Menu_Container");
-        UI_GameScreen.Instance.LoadUIAssets();
+        GameScreen.Instance.LoadUIAssets();
     }
 
     public void UnloadPages()
     {
-        UI_GameScreen.Instance.EmptyUI();
+        GameScreen.Instance.EmptyUI();
     }
 
     public void RegisterPage ( Delegate page , MenuPages pageType )
