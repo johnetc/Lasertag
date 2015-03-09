@@ -7,17 +7,15 @@ public class HitDetector : MonoBehaviour
 
     //public List<GameScreen.TouchLocation> HitLocation = new List<GameScreen.TouchLocation>();
 
-    public List<GameScreen.TouchLocation> ShieldLocation = new List<GameScreen.TouchLocation>();
+    public List<GameScreen.TouchLocation> ShieldLocations = new List<GameScreen.TouchLocation>();
 
     public bool IsHit;
 
-    public void AddHit(GameScreen.TouchLocation location)
+    public void CheckHit(GameScreen.TouchLocation location)
     {
-        //Debug.Log("hit "+ this.gameObject.name);
-        if (!ShieldLocation.Contains(location))
+        if (!ShieldLocations.Contains(location))
         {
             IsHit = true;
-            //Debug.Log("True");
         }
         
     }

@@ -31,7 +31,7 @@ public class ParticleColliderMono : MonoBehaviour
                 ////Debug.Log ( other.transform.position + " " + collisionEvents [ i ].intersection );
                 //Vector3 force = collisionEvents [ i ].velocity * 1;
                 ////other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
-                other.GetComponent<HitDetector> ().AddHit(thisLocation);
+                other.GetComponent<HitDetector> ().CheckHit(thisLocation);
                 ////Debug.Log("Hit from the... "+thisLocation);
                 ////Debug.Log(collisionEvents[i].collider.name);
                 ////Destroy(this.gameObject);
