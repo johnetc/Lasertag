@@ -20,6 +20,7 @@ public class EnemyManager {
 
     #endregion
 
+    public GameObject UnitContainer = new GameObject("Unit_container");
 
     public Dictionary<int , ObjectData> EnemyObjects = new Dictionary<int , ObjectData> ();
 
@@ -79,7 +80,6 @@ public class EnemyManager {
         
         foreach (var enemyObject in EnemyObjects)
         {
-            //Debug.Log ( enemyObject.Value.Id );
             if (enemyObject.Value.IsDead)
             {
                 Object.Destroy(enemyObject.Value.ThisObject);
@@ -90,7 +90,6 @@ public class EnemyManager {
 
         for (int i = 0; i < toRemove.Count; i++)
         {
-            //Debug.Log(toRemove[i]);
             EnemyObjects.Remove ( toRemove[i] );
         }
     }
@@ -105,6 +104,7 @@ public class EnemyManager {
 	{
 		ObjectData tempData = new ObjectData();
         GameObject tempGameObject = GameObject.Instantiate(CubePrefab, pos, Quaternion.identity) as GameObject;
+        tempGameObject.transform.SetParent(UnitContainer.transform);
 	    tempGameObject.name = type + " " + EnemyObjects.Count;
 	    tempData.ThisObject = tempGameObject;
 	    tempData.ThisType = type;
@@ -149,9 +149,7 @@ public class EnemyManager {
                 break;
 
         }
-
         return pos;
-
     }
 
     public List<GameData.TouchLocation> AddShields(GameData.ObjectType type, GameObject obj)

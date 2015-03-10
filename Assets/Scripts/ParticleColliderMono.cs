@@ -23,20 +23,24 @@ public class ParticleColliderMono : MonoBehaviour
 
         int numCollisionEvents = particleSystem.GetCollisionEvents ( other , collisionEvents );
         int i = 0;
-        while ( i < numCollisionEvents )
+        foreach (var particleCollisionEvent in collisionEvents)
         {
+            
+        //}
+        //( i < numCollisionEvents )
+        //{
             if ( other.GetComponent<Rigidbody>() )
             {
                 //Vector3 pos = collisionEvents [ i ].intersection;
                 ////Debug.Log ( other.transform.position + " " + collisionEvents [ i ].intersection );
                 //Vector3 force = collisionEvents [ i ].velocity * 1;
                 ////other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
-                other.GetComponent<HitDetector> ().CheckHit(thisLocation);
+                EnemyManager.Instance.CheckHit (  other.GetComponent<HitDetector> ().Id , thisLocation );
                 ////Debug.Log("Hit from the... "+thisLocation);
                 ////Debug.Log(collisionEvents[i].collider.name);
                 ////Destroy(this.gameObject);
             }
-            i++;
+            //i++;
         }
         
     }

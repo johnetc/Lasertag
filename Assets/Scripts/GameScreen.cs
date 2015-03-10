@@ -72,7 +72,6 @@ public class GameScreen  {
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
-        
         foreach (var button in tempScript.ButtonList)
         {
             PanelData tempPanel = new PanelData();
@@ -83,6 +82,7 @@ public class GameScreen  {
                 case "LeftPanel":
                     {
                         tempPanel.PanelLoc = GameData.TouchLocation.Left;
+                        //Debug.Log ( SceneManager.Instance.MainCamera.WorldToViewportPoint(button.GetComponent<RectTransform> ().anchoredPosition ));
                         break;
                     }
                 case "RightPanel":
@@ -139,11 +139,6 @@ public class GameScreen  {
         sphere.transform.position = GameData.BottomRightSpawnArea;
         sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
         sphere.transform.position = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.TopLeftSpawnArea.y , 100 );
-        
-    }
-
-    public void ColliderResult()
-    {
         
     }
 
