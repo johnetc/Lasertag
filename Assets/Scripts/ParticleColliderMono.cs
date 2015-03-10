@@ -5,7 +5,7 @@ using System.Collections;
 public class ParticleColliderMono : MonoBehaviour
 {
 
-    public GameScreen.TouchLocation thisLocation;
+    public GameData.TouchLocation thisLocation;
     private ParticleCollisionEvent [] collisionEvents = new ParticleCollisionEvent [ 16 ];
 
     public void Update()

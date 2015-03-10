@@ -5,19 +5,19 @@ using System.Collections;
 public class HitDetector : MonoBehaviour
 {
 
-    //public List<GameScreen.TouchLocation> HitLocation = new List<GameScreen.TouchLocation>();
+    public int Id;
 
-    public List<GameScreen.TouchLocation> ShieldLocations = new List<GameScreen.TouchLocation>();
+    //public List<GameScreen.TouchLocation> ShieldLocations = new List<GameScreen.TouchLocation>();
 
-    public bool IsHit;
+    //public bool IsHit;
 
-    public void CheckHit(GameScreen.TouchLocation location)
+    public void CheckHit(GameData.TouchLocation location)
     {
-        if (!ShieldLocations.Contains(location))
-        {
-            IsHit = true;
-        }
-        
+        //if (!ShieldLocations.Contains(location))
+        //{
+        //    IsHit = true;
+        //}
+        EnemyManager.Instance.CheckHit(Id, location );
     }
 
 }

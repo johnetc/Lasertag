@@ -69,32 +69,32 @@ public class ParticleManager
 
         switch ( panel.PanelLoc )
         {
-            case GameScreen.TouchLocation.Left:
+            case GameData.TouchLocation.Left:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.right * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameScreen.TouchLocation.Left;
+                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Left;
                     break;
                 }
-            case GameScreen.TouchLocation.Right:
+            case GameData.TouchLocation.Right:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.left * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameScreen.TouchLocation.Right;
+                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Right;
                     break;
                 }
-            case GameScreen.TouchLocation.Top:
+            case GameData.TouchLocation.Top:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.down * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameScreen.TouchLocation.Top;
+                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Top;
                     break;
                 }
-            case GameScreen.TouchLocation.Bottom:
+            case GameData.TouchLocation.Bottom:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.up * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameScreen.TouchLocation.Bottom;
+                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Bottom;
                     break;
                 }
 
@@ -199,11 +199,11 @@ public class ParticleManager
         {
             return true;
         }
-        if ( particle.position.x > GameScreen.Instance.BottomRight.x || particle.position.x < GameScreen.Instance.TopLeft.x )
+        if ( particle.position.x > GameData.BottomRightPoint.x || particle.position.x < GameData.TopLeftPoint.x )
         {
             return true;
         }
-        if ( particle.position.y > GameScreen.Instance.TopLeft.y || particle.position.y < GameScreen.Instance.BottomRight.y )
+        if ( particle.position.y > GameData.TopLeftPoint.y || particle.position.y < GameData.BottomRightPoint.y )
         {
             return true;
         }

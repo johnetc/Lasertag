@@ -30,31 +30,25 @@ public class GameScreen  {
     private GameObject m_GamePagePrefab;
 
     private ParticleManager m_ParticleManager;
-    private EnemyManager m_EnemyManager;
     
-    public Vector3 TopLeft;
-    public Vector3 BottomRight;
+    //public Vector3 TopLeft;
+    //public Vector3 BottomRight;
 
     public class PanelData
     {
         public Button PanelButton;
-        public TouchLocation PanelLoc;
+        public GameData.TouchLocation PanelLoc;
     }
 
-    public enum TouchLocation
+    public void Start()
     {
-        Top,
-        Left,
-        Bottom,
-        Right,
+        ResizeSpawnArea();
     }
 
     public void Update()
     {
         m_ParticleManager.Update();
-        m_EnemyManager.CheckObjectExistence();
-        m_EnemyManager.CheckObjectCreation();
-        m_EnemyManager.ObjectMovement();
+        
     }
 
     public void LoadUIAssets ()
@@ -74,13 +68,10 @@ public class GameScreen  {
         LoadPrefabVariables ( tempScript );
 
         m_ParticleManager = new ParticleManager();
-        m_EnemyManager = new EnemyManager();
     }
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
-        TopLeft = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 0 , 1 , SceneManager.Instance.MainCamera.nearClipPlane ) ) ;
-        BottomRight = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 1 , 0 , SceneManager.Instance.MainCamera.nearClipPlane ) );
         
         foreach (var button in tempScript.ButtonList)
         {
@@ -91,22 +82,22 @@ public class GameScreen  {
             {
                 case "LeftPanel":
                     {
-                        tempPanel.PanelLoc = TouchLocation.Left;
+                        tempPanel.PanelLoc = GameData.TouchLocation.Left;
                         break;
                     }
                 case "RightPanel":
                     {
-                        tempPanel.PanelLoc = TouchLocation.Right;
+                        tempPanel.PanelLoc = GameData.TouchLocation.Right;
                         break;
                     }
                 case "TopPanel":
                     {
-                        tempPanel.PanelLoc = TouchLocation.Top;
+                        tempPanel.PanelLoc = GameData.TouchLocation.Top;
                         break;
                     }
                 case "BottomPanel":
                     {
-                        tempPanel.PanelLoc = TouchLocation.Bottom;
+                        tempPanel.PanelLoc = GameData.TouchLocation.Bottom;
                         break;
                     }
             }
@@ -124,7 +115,33 @@ public class GameScreen  {
     {
         m_ParticleManager.NewShotSystem(panel);
     }
-   
+
+    public void ResizeSpawnArea ()
+    {
+        Vector3 tempSpawnTopLeft = (GameData.TopLeftPoint - GameData.MidPoint);
+        tempSpawnTopLeft = tempSpawnTopLeft.normalized;
+        float distance = Vector3.Distance(GameData.TopLeftPoint, GameData.MidPoint);
+        GameData.TopLeftSpawnArea = (GameData.MidPoint + ((GameData.SpawnScreenFraction*distance)*tempSpawnTopLeft));
+        GameData.TopLeftSpawnArea = new Vector3(GameData.TopLeftSpawnArea.x,GameData.TopLeftSpawnArea.y,100);
+
+        Vector3 tempSpawnBottomRight = ( GameData.BottomRightPoint - GameData.MidPoint );
+        tempSpawnBottomRight = tempSpawnBottomRight.normalized;
+        distance = Vector3.Distance ( GameData.BottomRightPoint , GameData.MidPoint );
+        GameData.BottomRightSpawnArea = ( GameData.MidPoint + ( ( GameData.SpawnScreenFraction * distance ) * tempSpawnBottomRight ) );
+        GameData.BottomRightSpawnArea = new Vector3(GameData.BottomRightSpawnArea.x,GameData.BottomRightSpawnArea.y,100);
+        //show points
+
+        GameObject sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        sphere.transform.position = GameData.TopLeftSpawnArea;
+        sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        sphere.transform.position = new Vector3 ( GameData.TopLeftSpawnArea.x , GameData.BottomRightSpawnArea.y , 100 );
+        sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        sphere.transform.position = GameData.BottomRightSpawnArea;
+        sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        sphere.transform.position = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.TopLeftSpawnArea.y , 100 );
+        
+    }
+
     public void ColliderResult()
     {
         

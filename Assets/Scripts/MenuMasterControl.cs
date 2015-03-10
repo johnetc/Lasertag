@@ -37,7 +37,7 @@ public class MenuMasterControl {
     public void LoadPageAssets()
     {
         MenuContainer = new GameObject("Menu_Container");
-        GameScreen.Instance.LoadUIAssets();
+        GameScreen.Instance.LoadUIAssets ();
     }
 
     public void UnloadPages()

@@ -28,6 +28,10 @@ public class SceneManager  {
 
     public void Start ()
     {
+        GameData.CalculateScreenDimensions();
+        GameScreen.Instance.Start();
+        EnemyManager.Instance.Start();
+
         MenuMasterControl.Instance.LoadPageAssets();
         MenuMasterControl.Instance.UnloadPages();
         MenuMasterControl.Instance.SwitchToPage ( MenuMasterControl.MenuPages.Game );
@@ -38,5 +42,6 @@ public class SceneManager  {
     {
         MenuMasterControl.Instance.Update();
         GameScreen.Instance.Update();
+        EnemyManager.Instance.Update();
     }
 }
