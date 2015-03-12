@@ -51,6 +51,7 @@ public class EnemyManager {
     public void Update()
     {
         CheckObjectCreation();
+        CheckObjectLocation();
         CheckObjectExistence();
         MoveObjects();
     }
@@ -71,6 +72,15 @@ public class EnemyManager {
         {
             CreateNewObject( ChooseStartPoint());
             m_EnemyGenerationTimer.Reset();
+        }
+    }
+
+    public void CheckObjectLocation()
+    {
+        foreach (var enemyObject in EnemyObjects)
+        {
+            Vector3 tempPos = enemyObject.Value.ThisObject.transform.position;
+            if (tempPos.x > )
         }
     }
 
