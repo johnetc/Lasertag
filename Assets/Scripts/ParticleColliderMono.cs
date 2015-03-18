@@ -31,12 +31,13 @@ public class ParticleColliderMono : MonoBehaviour
         //{
             if ( other.GetComponent<Rigidbody>() )
             {
+                //Debug.Log ( "Hit from the... " + thisLocation );
                 //Vector3 pos = collisionEvents [ i ].intersection;
                 ////Debug.Log ( other.transform.position + " " + collisionEvents [ i ].intersection );
                 //Vector3 force = collisionEvents [ i ].velocity * 1;
                 ////other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
-                EnemyManager.Instance.CheckHit (  other.GetComponent<HitDetector> ().Id , thisLocation );
-                ////Debug.Log("Hit from the... "+thisLocation);
+                EnemyManager.Instance.CheckHit ( other.GetComponent<Mono_Id> ().Id , other.GetComponent<Mono_Id> ().ThisObjType , thisLocation );
+                
                 ////Debug.Log(collisionEvents[i].collider.name);
                 ////Destroy(this.gameObject);
             }

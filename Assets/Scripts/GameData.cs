@@ -3,31 +3,45 @@ using System.Collections;
 
 public class GameData
 {
+    //game area
+    public static Vector3 TopLeftPoint;
+    public static Vector3 BottomRightPoint;
 
+    public static float MidPointx;
+    public static float MidPointy;
+    public static Vector3 MidPoint;
+    public static Vector3 TopLeftSpawnArea;
+    public static Vector3 BottomRightSpawnArea;
+    public static float SpawnScreenFraction = 0.4f;
+
+    public static Vector3 TopLeftEnemyBorder;
+    public static Vector3 BottomRightEnemyBorder;
+    
+    //particles
     public static float ShotParticleVelocityMult = 200;
     public static float ShotParticleSize = 10;
     public static float ShotParticleLifetime = 10;
     public static Color32 ShotParticleColour = new Color32(255,255,255,255);
     public static int NumberOfParticlesPerShot = 1;
     public static float ParticleShotIntervalMS = 2000;
-    public static float ObjectCreationIntervalMS = 3000;
+    public static float ObjectCreationIntervalMS = 1000;
 
-    public static Vector3 TopLeftPoint;
-    public static Vector3 BottomRightPoint;
-    public static float MidPointx;
-    public static float MidPointy;
-    public static Vector3 MidPoint ;
-    public static Vector3 TopLeftSpawnArea;
-    public static Vector3 BottomRightSpawnArea;
-    public static float SpawnScreenFraction = 0.35f;
+    //enemies
     public static float StartSpeed = 0.15f;
 
+    
     public enum TouchLocation
     {
         Top ,
         Left ,
         Bottom ,
         Right ,
+    }
+
+    public enum ComponentType
+    {
+        MainBody,
+        Shield,
     }
 
     public static void CalculateScreenDimensions()

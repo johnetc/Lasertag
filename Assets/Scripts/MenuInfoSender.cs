@@ -12,6 +12,7 @@ public class MenuInfoSender : MonoBehaviour {
     public List<Slider> SliderList;
     public List<Toggle> ToggleList;
     public List<VerticalLayoutGroup> VertLayoutGroup;
+    public List<MenuInfoSender> MenuInfoGroup;
 
 	public void GetPrefabComponents () 
 	{
@@ -45,6 +46,12 @@ public class MenuInfoSender : MonoBehaviour {
         foreach ( var componentsInChild in gameObject.GetComponentsInChildren<VerticalLayoutGroup> () )
         {
             VertLayoutGroup.Add ( componentsInChild );
+        }
+
+        MenuInfoGroup = new List<MenuInfoSender>();
+        foreach ( var componentsInChild in gameObject.GetComponentsInChildren<MenuInfoSender> () )
+        {
+            MenuInfoGroup.Add ( componentsInChild );
         }
 
 	}
