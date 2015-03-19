@@ -35,6 +35,7 @@ public class EnemyManager {
         public Vector3 MovingTo;
         public float Speed;
         public Collider Col;
+        public bool Rotate;
     }
 
     public GameObject CubePrefab;
@@ -55,7 +56,7 @@ public class EnemyManager {
         CheckObjectLocation();
         CheckObjectExistence();
         MoveObjects();
-        //CheckColliders();
+        
     }
 
     public void LoadAssets()
@@ -239,26 +240,27 @@ public class EnemyManager {
         {
             GameObject tempGameObject = GameObject.Instantiate ( ShieldPrefab , obj.transform.position , Quaternion.identity ) as GameObject;
             tempGameObject.GetComponent<Mono_Id>().Id = id;
+            tempGameObject.GetComponent<Renderer>().material.color = Color.red;
             switch (touchLocation)
             {
                     case GameData.TouchLocation.Top:
                     tempGameObject.transform.localScale = new Vector3(tempGameObject.transform.lossyScale.x, 2, 10);
-                    tempGameObject.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y+7f, 90);
+                    tempGameObject.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y+4f, 80);
                     tempGameObject.transform.SetParent(obj.transform);
                     break;
                     case GameData.TouchLocation.Right:
                     tempGameObject.transform.localScale = new Vector3 ( 2, tempGameObject.transform.lossyScale.y , 10 );
-                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x + 7f , obj.transform.position.y , 90 );
+                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x + 4f , obj.transform.position.y , 80 );
                     tempGameObject.transform.SetParent(obj.transform);
                     break;
                     case GameData.TouchLocation.Bottom:
                     tempGameObject.transform.localScale = new Vector3(tempGameObject.transform.lossyScale.x, 2, 10);
-                    tempGameObject.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y-7f, 90);
+                    tempGameObject.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y-4f, 80);
                     tempGameObject.transform.SetParent(obj.transform);
                     break;
                     case GameData.TouchLocation.Left:
                     tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
-                    tempGameObject.transform.position = new Vector3(obj.transform.position.x-7f, obj.transform.position.y, 90);
+                    tempGameObject.transform.position = new Vector3(obj.transform.position.x-4f, obj.transform.position.y, 80);
                     tempGameObject.transform.SetParent(obj.transform);
                     break;
             }
@@ -275,9 +277,9 @@ public class EnemyManager {
         }
     }
 
-    public void CheckColliders(GameObject objOne, GameObject objTwo)
+    public void CheckColliders(int objOne, GameObject objTwo)
     {
-        //Debug.Log ( objOne.name + " " + objTwo.name );
+        Debug.Log ( objOne.name + " " + objTwo.name );
 
         int idOne = -1;
         int idTwo = -1;
@@ -285,46 +287,45 @@ public class EnemyManager {
         if ( objOne.GetComponent<Mono_Id> () != null )
         {
             idOne = objOne.GetComponent<Mono_Id> ().Id;
-            objOne.transform.Rotate ( new Vector3 ( 0 , 0 , 90 ) );
-            if ( EnemyObjects [ idOne ].IsDead )
-            {
-                return;
-            }
+            objOne.transform.Rotate ( new Vector3 ( 0 , 0 , 45 ) );
+            //if ( EnemyObjects [ idOne ].IsDead )
+            //{
+            //    return;
+            //}
         }
         if ( objTwo.GetComponent<Mono_Id> () != null )
         {
             idTwo = objTwo.GetComponent<Mono_Id> ().Id;
-            objTwo.transform.Rotate ( new Vector3 ( 0 , 0 , 90 ) );
-            if ( EnemyObjects [ idTwo ].IsDead )
-            {
-                return;
-            }
+            objTwo.transform.Rotate ( new Vector3 ( 0 , 0 , 45 ) );
+            //if ( EnemyObjects [ idTwo ].IsDead )
+            //{
+            //    return;
+            //}
         }
 
-        if ( idOne != -1 )
-        {
-            EnemyObjects [ idOne ].IsDead = true;
-            //Debug.Log ( objOne.name + " One: Is dead " );
-        }
-        if ( idTwo != -1 )
-        {
-            EnemyObjects [ idOne ].IsDead = true;
-            //Debug.Log ( objTwo.name + " Two: Is dead " );
-        }
-
+        //if ( idOne != -1 )
+        //{
+        //    EnemyObjects [ idOne ].IsDead = true;
+        //    //Debug.Log ( objOne.name + " One: Is dead " );
+        //}
+        //if ( idTwo != -1 )
+        //{
+        //    EnemyObjects [ idOne ].IsDead = true;
+        //    //Debug.Log ( objTwo.name + " Two: Is dead " );
+        //}
+        CheckObjectExistence();
     }
 
     public void CheckHit(int id, GameData.ComponentType componentHit, GameData.TouchLocation location)
     {
-        if (componentHit == GameData.ComponentType.Shield)
+        if (componentHit != GameData.ComponentType.MainBody)
         {
             return;
         }
-        //Debug.Log("not shield");
+        
         if ( !EnemyObjects [ id ].ShieldLocations.Contains ( location ) )
         {
             EnemyObjects [ id ].IsDead = true;
-            //Debug.Log(id+" is dead");
         }
 
     }

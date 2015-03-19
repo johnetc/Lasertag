@@ -10,7 +10,7 @@ public class Mono_Id : MonoBehaviour
     public void OnCollisionEnter(Collision collision)
     {
        //Debug.Log(this.gameObject.name);
-        EnemyManager.Instance.CheckColliders(this.gameObject, collision.gameObject);
+        EnemyManager.Instance.CheckColliders(this.Id, collision.gameObject);
     }
 
 }

@@ -27,7 +27,7 @@ public class GameData
     public static float ObjectCreationIntervalMS = 1000;
 
     //enemies
-    public static float StartSpeed = 0.15f;
+    public static float StartSpeed = 0.075f;
 
     
     public enum TouchLocation
