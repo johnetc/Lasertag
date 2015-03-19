@@ -19,16 +19,20 @@ public class GameData
     
     //particles
     public static float ShotParticleVelocityMult = 200;
-    public static float ShotParticleSize = 10;
+    public static float ShotParticleSize = 20;
     public static float ShotParticleLifetime = 10;
     public static Color32 ShotParticleColour = new Color32(255,255,255,255);
     public static int NumberOfParticlesPerShot = 1;
     public static float ParticleShotIntervalMS = 2000;
-    public static float ObjectCreationIntervalMS = 1000;
+    
 
     //enemies
-    public static float StartSpeed = 0.075f;
-
+    public static float MaxEnemyObjects = 15;
+    public static float ObjectCreationIntervalMS = 1000;
+    public static float StartSpeed = 0.3f;
+    public static float CollisionRotSpeed = 3f;
+    public static float CollisionRotTotal = 90f;
+    public static float InvincibilityTimerMS = 3000f;
     
     public enum TouchLocation
     {

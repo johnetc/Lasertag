@@ -195,7 +195,7 @@ public class ParticleManager
 
     public bool CheckParticleStats ( ParticleSystem.Particle particle )
     {
-        if ( particle.velocity == Vector3.zero )
+        if ( particle.velocity.magnitude < GameData.ShotParticleVelocityMult )
         {
             return true;
         }

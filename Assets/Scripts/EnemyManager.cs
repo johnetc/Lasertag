@@ -31,11 +31,14 @@ public class EnemyManager {
         public GameData.ObjectType ThisType;
         public Mono_Id ThisMonoId;
         public List<GameData.TouchLocation> ShieldLocations;
+        public List<BoxCollider> ShieldCols;
         public bool IsDead;
         public Vector3 MovingTo;
         public float Speed;
-        public Collider Col;
+        public BoxCollider BoxCol;
         public bool Rotate;
+        public Vector3 Facing;
+        public Stopwatch InvinceTimer = new Stopwatch();
     }
 
     public GameObject CubePrefab;
@@ -55,8 +58,10 @@ public class EnemyManager {
         CheckObjectCreation();
         CheckObjectLocation();
         CheckObjectExistence();
+        RotateObjects();
         MoveObjects();
-        
+        CheckInvincibility();
+
     }
 
     public void LoadAssets()
@@ -71,10 +76,15 @@ public class EnemyManager {
         {
             m_EnemyGenerationTimer.Start();
         }
-        if (m_EnemyGenerationTimer.ElapsedMilliseconds > GameData.ObjectCreationIntervalMS)
+        //if (m_EnemyGenerationTimer.ElapsedMilliseconds > GameData.ObjectCreationIntervalMS)
+        //{
+        //    CreateNewObject( Vector3.zero);
+        //    m_EnemyGenerationTimer.Reset();
+        //}
+        if ( m_EnemyGenerationTimer.ElapsedMilliseconds > GameData.ObjectCreationIntervalMS && EnemyObjects.Count < GameData.MaxEnemyObjects)
         {
-            CreateNewObject( Vector3.zero);
-            m_EnemyGenerationTimer.Reset();
+            CreateNewObject ( Vector3.zero );
+            m_EnemyGenerationTimer.Reset ();
         }
     }
 
@@ -133,12 +143,14 @@ public class EnemyManager {
 	    tempData.MovingTo = ChooseMovementEndpoint();
 	    tempData.Speed = GameData.StartSpeed;
 	    tempData.ThisMonoId = tempGameObject.GetComponent<Mono_Id>();
-        tempData.Col = tempGameObject.GetComponent<Collider> ();
-        //tempData.Col.isTrigger = false;
-        ChooseStartPoint ( tempData.Col );
-        //tempData.Col.isTrigger = true;
-        tempData.ShieldLocations = new List<GameData.TouchLocation>();
-        tempData.ShieldLocations = AddShields(tempData.Id,tempData.ThisType, tempGameObject);
+        tempData.BoxCol = tempGameObject.GetComponent<BoxCollider> ();
+        //tempData.BoxCol.isTrigger = false;
+        ChooseStartPoint ( tempData.BoxCol );
+        //tempData.BoxCol.isTrigger = true;
+        //tempData.ShieldLocations = new List<GameData.TouchLocation>();
+        //tempData.ShieldLocations = AddShields(tempData.Id,tempData.ThisType, tempGameObject);
+        tempData.ShieldCols = new List<BoxCollider>();
+        tempData.ShieldCols = AddShields ( tempData.Id , tempData.ThisType , tempGameObject );
 	    tempData.ThisMonoId.Id = CurrentId;
 	    
         EnemyObjects.Add ( CurrentId,tempData );
@@ -155,7 +167,7 @@ public class EnemyManager {
         bool inObject = false;
         foreach (var enemyObject in EnemyObjects)
         {
-            if (enemyObject.Value.Col.bounds.Intersects(col.bounds))
+            if (enemyObject.Value.BoxCol.bounds.Intersects(col.bounds))
             {
                 inObject = true;
             }
@@ -206,7 +218,7 @@ public class EnemyManager {
         return pos;
     }
 
-    public List<GameData.TouchLocation> AddShields(int id, GameData.ObjectType type, GameObject obj)
+    public List<BoxCollider> AddShields(int id, GameData.ObjectType type, GameObject obj)
     {
         GameData.ShieldArrangement tempShieldArray = new GameData.ShieldArrangement();
 
@@ -236,11 +248,14 @@ public class EnemyManager {
             shieldLocs.Add((GameData.TouchLocation)rand);
         }
 
+        List<BoxCollider> colList = new List<BoxCollider>();
+
         foreach (var touchLocation in shieldLocs)
         {
             GameObject tempGameObject = GameObject.Instantiate ( ShieldPrefab , obj.transform.position , Quaternion.identity ) as GameObject;
             tempGameObject.GetComponent<Mono_Id>().Id = id;
             tempGameObject.GetComponent<Renderer>().material.color = Color.red;
+            colList.Add(tempGameObject.GetComponent<BoxCollider> ());
             switch (touchLocation)
             {
                     case GameData.TouchLocation.Top:
@@ -266,54 +281,81 @@ public class EnemyManager {
             }
         }
 
-        return shieldLocs;
+        return colList;
+    }
+
+    public void RotateObjects()
+    {
+        foreach ( var enemyObject in EnemyObjects )
+        {
+            if (enemyObject.Value.Rotate)
+            {
+                enemyObject.Value.ThisObject.transform.Rotate(0,0,GameData.CollisionRotSpeed);
+                //int tempVal = Mathf.CeilToInt ( enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z );
+                float tempVal = enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z ;
+                ////Debug.Log(tempVal);
+                //Debug.Log ( enemyObject.Value.ThisObject.name + " " + enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z );
+                if ( tempVal >  (enemyObject.Value.Facing.z+GameData.CollisionRotTotal) )
+                {
+                    //Debug.Log(enemyObject.Value.ThisObject.name);
+                    enemyObject.Value.ThisObject.transform.eulerAngles = new Vector3 ( 0 , 0 , enemyObject.Value.Facing.z + GameData.CollisionRotTotal );
+                    enemyObject.Value.Rotate = false;
+                    enemyObject.Value.InvinceTimer.Start();
+
+                }
+            }
+        }
     }
 
     public void MoveObjects()
     {
         foreach (var enemyObject in EnemyObjects)
         {
-            enemyObject.Value.ThisObject.transform.Translate ( enemyObject.Value.MovingTo * enemyObject.Value.Speed);
+            if (!enemyObject.Value.Rotate)
+            {
+                enemyObject.Value.ThisObject.transform.Translate(enemyObject.Value.MovingTo*enemyObject.Value.Speed);
+            }
+            //else
+            //{
+            //    enemyObject.Value.BoxCol.enabled = true;
+            //}
         }
     }
 
-    public void CheckColliders(int objOne, GameObject objTwo)
+    public void CheckInvincibility()
     {
-        Debug.Log ( objOne.name + " " + objTwo.name );
-
-        int idOne = -1;
-        int idTwo = -1;
-
-        if ( objOne.GetComponent<Mono_Id> () != null )
+        foreach (var enemyObject in EnemyObjects)
         {
-            idOne = objOne.GetComponent<Mono_Id> ().Id;
-            objOne.transform.Rotate ( new Vector3 ( 0 , 0 , 45 ) );
-            //if ( EnemyObjects [ idOne ].IsDead )
-            //{
-            //    return;
-            //}
+            if (enemyObject.Value.InvinceTimer.ElapsedMilliseconds > GameData.InvincibilityTimerMS)
+            {
+                enemyObject.Value.InvinceTimer.Reset();
+                //enemyObject.Value.BoxCol.enabled = true;
+                //foreach ( var shieldCol in enemyObject.Value.ShieldCols )
+                //{
+                //    shieldCol.enabled = true;
+                //}
+            }
         }
-        if ( objTwo.GetComponent<Mono_Id> () != null )
+    }
+
+    public void CheckColliders ( int objOne , GameData.ComponentType objOnetype , int objTwo , GameData.ComponentType objTwotype )
+    {
+
+        if (EnemyObjects[objOne].Rotate || EnemyObjects[objTwo].Rotate)
         {
-            idTwo = objTwo.GetComponent<Mono_Id> ().Id;
-            objTwo.transform.Rotate ( new Vector3 ( 0 , 0 , 45 ) );
-            //if ( EnemyObjects [ idTwo ].IsDead )
-            //{
-            //    return;
-            //}
+            return;
+        }
+        if ( EnemyObjects [ objOne ].InvinceTimer.IsRunning || EnemyObjects [ objTwo ].InvinceTimer.IsRunning )
+        {
+            return;
         }
 
-        //if ( idOne != -1 )
-        //{
-        //    EnemyObjects [ idOne ].IsDead = true;
-        //    //Debug.Log ( objOne.name + " One: Is dead " );
-        //}
-        //if ( idTwo != -1 )
-        //{
-        //    EnemyObjects [ idOne ].IsDead = true;
-        //    //Debug.Log ( objTwo.name + " Two: Is dead " );
-        //}
-        CheckObjectExistence();
+        //Debug.Log ( objOne + " " + objTwo );
+        EnemyObjects[objOne].Rotate = true;
+        EnemyObjects[objOne].Facing = EnemyObjects[objOne].ThisObject.transform.rotation.eulerAngles;
+        EnemyObjects [ objTwo ].Rotate = true;
+        EnemyObjects [ objTwo ].Facing = EnemyObjects [ objTwo ].ThisObject.transform.rotation.eulerAngles;
+
     }
 
     public void CheckHit(int id, GameData.ComponentType componentHit, GameData.TouchLocation location)
