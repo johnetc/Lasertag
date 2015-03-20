@@ -6,7 +6,7 @@ public class ParticleColliderMono : MonoBehaviour
 {
 
     public GameData.TouchLocation thisLocation;
-    private ParticleCollisionEvent [] collisionEvents = new ParticleCollisionEvent [ 16 ];
+    private ParticleCollisionEvent [] collisionEvents = new ParticleCollisionEvent [ 1 ];
 
     public void Update()
     {
@@ -37,8 +37,8 @@ public class ParticleColliderMono : MonoBehaviour
                 //Vector3 force = collisionEvents [ i ].velocity * 1;
                 ////other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
                 EnemyManager.Instance.CheckHit ( other.GetComponent<Mono_Id> ().Id , other.GetComponent<Mono_Id> ().ThisObjType , thisLocation );
-                
-                ////Debug.Log(collisionEvents[i].collider.name);
+
+                //Debug.Log ( collisionEvents [ i ].collider.name );
                 ////Destroy(this.gameObject);
             }
             //i++;

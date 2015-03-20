@@ -21,6 +21,14 @@ public class SceneManager  {
     public Camera MainCamera;
     public EventSystem TheEventSystem;
 
+    public enum GameState
+    {
+        Play,
+        Stop
+    }
+
+    public GameState CurrentState;
+
     public void Awake ()
     {
         TheEventSystem = GameObject.FindObjectOfType<EventSystem>();
@@ -41,7 +49,23 @@ public class SceneManager  {
     public void Update ()
     {
         MenuMasterControl.Instance.Update();
-        GameScreen.Instance.Update();
-        EnemyManager.Instance.Update();
+
+        switch (CurrentState)
+        {
+                case GameState.Play:
+                GameScreen.Instance.Update();
+                EnemyManager.Instance.Update();
+                break;
+                case GameState.Stop:
+                GameScreen.Instance.Update();
+                break;
+        }
+
+        
+    }
+
+    public void OnDrawGizmos() 
+    {
+       GameScreen.Instance.OnDrawGizmos();
     }
 }

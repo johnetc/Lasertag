@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using UnityEngine;
 using System.Collections;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
+using Random = UnityEngine.Random;
 
 public class EnemyManager {
 
@@ -30,7 +33,7 @@ public class EnemyManager {
         public GameObject ThisObject;
         public GameData.ObjectType ThisType;
         public Mono_Id ThisMonoId;
-        public List<GameData.TouchLocation> ShieldLocations;
+        public GameData.ShieldArrangement ShieldLocations;
         public List<BoxCollider> ShieldCols;
         public bool IsDead;
         public Vector3 MovingTo;
@@ -95,10 +98,12 @@ public class EnemyManager {
             Vector3 tempPos = enemyObject.Value.ThisObject.transform.position;
             if (tempPos.x < GameData.TopLeftEnemyBorder.x || tempPos.x > GameData.BottomRightEnemyBorder.x)
             {
+                GameScreen.Instance.ModifyLives ( -1 );
                 enemyObject.Value.IsDead = true;
             }
             if ( tempPos.y < GameData.BottomRightEnemyBorder.y || tempPos.y > GameData.TopLeftEnemyBorder.y )
             {
+                GameScreen.Instance.ModifyLives ( -1 );
                 enemyObject.Value.IsDead = true;
             }
         }
@@ -144,15 +149,12 @@ public class EnemyManager {
 	    tempData.Speed = GameData.StartSpeed;
 	    tempData.ThisMonoId = tempGameObject.GetComponent<Mono_Id>();
         tempData.BoxCol = tempGameObject.GetComponent<BoxCollider> ();
-        //tempData.BoxCol.isTrigger = false;
         ChooseStartPoint ( tempData.BoxCol );
-        //tempData.BoxCol.isTrigger = true;
-        //tempData.ShieldLocations = new List<GameData.TouchLocation>();
-        //tempData.ShieldLocations = AddShields(tempData.Id,tempData.ThisType, tempGameObject);
+        tempData.ShieldLocations = GameData.ShieldArray [ ( int ) tempData.ThisType ];
         tempData.ShieldCols = new List<BoxCollider>();
         tempData.ShieldCols = AddShields ( tempData.Id , tempData.ThisType , tempGameObject );
 	    tempData.ThisMonoId.Id = CurrentId;
-	    
+	    tempData.ThisObject.transform.localScale = Vector3.one * GameData.ObjectScale;
         EnemyObjects.Add ( CurrentId,tempData );
 	    CurrentId++;
 	}
@@ -188,7 +190,7 @@ public class EnemyManager {
     {
         float x = Random.Range ( GameData.TopLeftSpawnArea.x , GameData.BottomRightSpawnArea.x + 1 );
         float y = Random.Range ( GameData.TopLeftSpawnArea.y , GameData.BottomRightSpawnArea.y + 1 );
-        Vector3 pos = new Vector3 ( x , y , 90 );
+        Vector3 pos = new Vector3 ( x , y , GameData.CameraDepth );
         return pos;
     }
 
@@ -224,59 +226,53 @@ public class EnemyManager {
 
         tempShieldArray = GameData.ShieldArray[(int) type];
         
-        List<GameData.TouchLocation> shieldLocs = new List<GameData.TouchLocation>();
+        List<BoxCollider> tempColList = new List<BoxCollider>();
 
-        for (int i = 0; i < tempShieldArray.Top; i++)
-        {
-            shieldLocs.Add(GameData.TouchLocation.Top);
-        }
-        for ( int i = 0; i < tempShieldArray.Bottom; i++ )
-        {
-            shieldLocs.Add(GameData.TouchLocation.Bottom);
-        }
-        for ( int i = 0; i < tempShieldArray.Left; i++ )
-        {
-            shieldLocs.Add(GameData.TouchLocation.Left);
-        }
-        for ( int i = 0; i < tempShieldArray.Right; i++ )
-        {
-            shieldLocs.Add(GameData.TouchLocation.Right);
-        }
+        tempColList.AddRange(AddShield(tempShieldArray.Top.Count, GameData.TouchLocation.Top, id,type,obj));
+        tempColList.AddRange ( AddShield ( tempShieldArray.Bottom.Count , GameData.TouchLocation.Bottom , id , type , obj ) );
+        tempColList.AddRange ( AddShield ( tempShieldArray.Left.Count , GameData.TouchLocation.Left , id , type , obj ) );
+        tempColList.AddRange ( AddShield ( tempShieldArray.Right.Count , GameData.TouchLocation.Right , id , type , obj ) );
+
         for ( int i = 0; i < tempShieldArray.Random; i++ )
         {
             int rand = Random.Range(0, 4);
-            shieldLocs.Add((GameData.TouchLocation)rand);
+            tempColList.AddRange (AddShield ( 1 , ( GameData.TouchLocation ) rand , id , type , obj ));
         }
 
-        List<BoxCollider> colList = new List<BoxCollider>();
+        return tempColList;
+    }
 
-        foreach (var touchLocation in shieldLocs)
+    private List<BoxCollider> AddShield ( int number , GameData.TouchLocation touchLocation , int id , GameData.ObjectType type , GameObject obj )
+    {
+        List<BoxCollider> colList = new List<BoxCollider> ();
+        
+        for (int i = 0; i < number; i++)
         {
             GameObject tempGameObject = GameObject.Instantiate ( ShieldPrefab , obj.transform.position , Quaternion.identity ) as GameObject;
-            tempGameObject.GetComponent<Mono_Id>().Id = id;
-            tempGameObject.GetComponent<Renderer>().material.color = Color.red;
-            colList.Add(tempGameObject.GetComponent<BoxCollider> ());
-            switch (touchLocation)
+            tempGameObject.GetComponent<Mono_Id> ().Id = id;
+            tempGameObject.GetComponent<Renderer> ().material.color = Color.red;
+            colList.Add ( tempGameObject.GetComponent<BoxCollider> () );
+            switch ( touchLocation )
             {
-                    case GameData.TouchLocation.Top:
-                    tempGameObject.transform.localScale = new Vector3(tempGameObject.transform.lossyScale.x, 2, 10);
-                    tempGameObject.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y+4f, 80);
-                    tempGameObject.transform.SetParent(obj.transform);
+                case GameData.TouchLocation.Top:
+                    tempGameObject.transform.localScale = new Vector3 ( tempGameObject.transform.lossyScale.x , 2 , 10 );
+                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x , obj.transform.position.y + 4f , GameData.ShieldDepth );
+                    tempGameObject.transform.SetParent ( obj.transform );
                     break;
-                    case GameData.TouchLocation.Right:
-                    tempGameObject.transform.localScale = new Vector3 ( 2, tempGameObject.transform.lossyScale.y , 10 );
-                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x + 4f , obj.transform.position.y , 80 );
-                    tempGameObject.transform.SetParent(obj.transform);
-                    break;
-                    case GameData.TouchLocation.Bottom:
-                    tempGameObject.transform.localScale = new Vector3(tempGameObject.transform.lossyScale.x, 2, 10);
-                    tempGameObject.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y-4f, 80);
-                    tempGameObject.transform.SetParent(obj.transform);
-                    break;
-                    case GameData.TouchLocation.Left:
+                case GameData.TouchLocation.Right:
                     tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
-                    tempGameObject.transform.position = new Vector3(obj.transform.position.x-4f, obj.transform.position.y, 80);
-                    tempGameObject.transform.SetParent(obj.transform);
+                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x + 4f , obj.transform.position.y , GameData.ShieldDepth );
+                    tempGameObject.transform.SetParent ( obj.transform );
+                    break;
+                case GameData.TouchLocation.Bottom:
+                    tempGameObject.transform.localScale = new Vector3 ( tempGameObject.transform.lossyScale.x , 2 , 10 );
+                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x , obj.transform.position.y - 4f , GameData.ShieldDepth );
+                    tempGameObject.transform.SetParent ( obj.transform );
+                    break;
+                case GameData.TouchLocation.Left:
+                    tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
+                    tempGameObject.transform.position = new Vector3 ( obj.transform.position.x - 4f , obj.transform.position.y , GameData.ShieldDepth );
+                    tempGameObject.transform.SetParent ( obj.transform );
                     break;
             }
         }
@@ -291,17 +287,16 @@ public class EnemyManager {
             if (enemyObject.Value.Rotate)
             {
                 enemyObject.Value.ThisObject.transform.Rotate(0,0,GameData.CollisionRotSpeed);
-                //int tempVal = Mathf.CeilToInt ( enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z );
+                
                 float tempVal = enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z ;
-                ////Debug.Log(tempVal);
-                //Debug.Log ( enemyObject.Value.ThisObject.name + " " + enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z );
-                if ( tempVal >  (enemyObject.Value.Facing.z+GameData.CollisionRotTotal) )
-                {
-                    //Debug.Log(enemyObject.Value.ThisObject.name);
-                    enemyObject.Value.ThisObject.transform.eulerAngles = new Vector3 ( 0 , 0 , enemyObject.Value.Facing.z + GameData.CollisionRotTotal );
-                    enemyObject.Value.Rotate = false;
-                    enemyObject.Value.InvinceTimer.Start();
 
+                if ( tempVal >  (enemyObject.Value.Facing.z+GameData.CollisionRotTotal) || tempVal < 1)
+                {
+                    enemyObject.Value.ThisObject.transform.eulerAngles = new Vector3 ( 0 , 0 , Mathf.FloorToInt ( enemyObject.Value.Facing.z + GameData.CollisionRotTotal ) );
+                    enemyObject.Value.Facing = enemyObject.Value.ThisObject.transform.eulerAngles;
+                    enemyObject.Value.Rotate = false;
+                    enemyObject.Value.InvinceTimer.Start ();
+                     
                 }
             }
         }
@@ -364,11 +359,33 @@ public class EnemyManager {
         {
             return;
         }
-        
-        if ( !EnemyObjects [ id ].ShieldLocations.Contains ( location ) )
+
+        else
         {
-            EnemyObjects [ id ].IsDead = true;
+            GameScreen.Instance.ModifyScore( 1 );
+            EnemyObjects[id].IsDead = true;
         }
+
+        //Debug.Log ( "id " + id + " type " + componentHit + " location " + location );
+        //Debug.Log ( EnemyObjects [ id ].Facing );
+        
+        //int rot = Mathf.FloorToInt(EnemyObjects [ id ].Facing.z);
+        //int loc = (int)location;
+        //int turns = rot/90;
+
+        //for (int i = 0; i < turns; i++)
+        //{
+        //    loc = loc + 1;
+        //    if (loc > 2)
+        //    {
+        //        loc = 0;
+        //    }
+        //}
+
+        //Debug.Log("rot " + rot + " loc " + (GameData.TouchLocation)loc);
+
+        //location = (GameData.TouchLocation) loc;
+
 
     }
 }

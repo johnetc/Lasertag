@@ -19,4 +19,9 @@ public class GameController : MonoBehaviour
     {
         SceneManager.Instance.Update();
 	}
+
+    void OnDrawGizmos ()
+    {
+        SceneManager.Instance.OnDrawGizmos ();
+    }
 }

@@ -29,6 +29,8 @@ public class GameScreen  {
     private GameObject m_GamePageContainer;
     private GameObject m_GamePagePrefab;
     private GameObject m_GamePagePrefabBorderParent;
+    private Dictionary<string, Text> m_UITextDict = new Dictionary<string, Text>();
+    private Dictionary<string , Button> m_UIButtonDict = new Dictionary<string , Button> ();
 
     private ParticleManager m_ParticleManager;
     
@@ -58,23 +60,23 @@ public class GameScreen  {
         tempSpawnTopLeft = tempSpawnTopLeft.normalized;
         float distance = Vector3.Distance ( GameData.TopLeftPoint , GameData.MidPoint );
         GameData.TopLeftSpawnArea = ( GameData.MidPoint + ( ( GameData.SpawnScreenFraction * distance ) * tempSpawnTopLeft ) );
-        GameData.TopLeftSpawnArea = new Vector3 ( GameData.TopLeftSpawnArea.x , GameData.TopLeftSpawnArea.y , 100 );
+        GameData.TopLeftSpawnArea = new Vector3 ( GameData.TopLeftSpawnArea.x , GameData.TopLeftSpawnArea.y , GameData.CameraDepth );
 
         Vector3 tempSpawnBottomRight = ( GameData.BottomRightPoint - GameData.MidPoint );
         tempSpawnBottomRight = tempSpawnBottomRight.normalized;
         distance = Vector3.Distance ( GameData.BottomRightPoint , GameData.MidPoint );
         GameData.BottomRightSpawnArea = ( GameData.MidPoint + ( ( GameData.SpawnScreenFraction * distance ) * tempSpawnBottomRight ) );
-        GameData.BottomRightSpawnArea = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.BottomRightSpawnArea.y , 100 );
+        GameData.BottomRightSpawnArea = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.BottomRightSpawnArea.y , GameData.CameraDepth );
         //show points
 
-        GameObject sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
-        sphere.transform.position = GameData.TopLeftSpawnArea;
-        sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
-        sphere.transform.position = new Vector3 ( GameData.TopLeftSpawnArea.x , GameData.BottomRightSpawnArea.y , 100 );
-        sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
-        sphere.transform.position = GameData.BottomRightSpawnArea;
-        sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
-        sphere.transform.position = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.TopLeftSpawnArea.y , 100 );
+        //GameObject sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        //sphere.transform.position = GameData.TopLeftSpawnArea;
+        //sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        //sphere.transform.position = new Vector3 ( GameData.TopLeftSpawnArea.x , GameData.BottomRightSpawnArea.y , GameData.CameraDepth );
+        //sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        //sphere.transform.position = GameData.BottomRightSpawnArea;
+        //sphere = GameObject.CreatePrimitive ( PrimitiveType.Sphere );
+        //sphere.transform.position = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.TopLeftSpawnArea.y , GameData.CameraDepth );
 
     }
 
@@ -100,6 +102,7 @@ public class GameScreen  {
 
     private void LoadActiveScreenPositions()
     {
+        //Debug.Log("Load screen pos");
         RectTransform [] ids = m_GamePagePrefabBorderParent.GetComponentsInChildren<RectTransform> ();
 
         float leftX = ids [ 0 ].gameObject.transform.position.x;
@@ -109,6 +112,7 @@ public class GameScreen  {
         
         foreach (var monoId in ids)
         {
+            //Debug.Log(monoId.gameObject.transform.position);
             if (monoId.gameObject.transform.position.x > leftX)
             {
                 rightX = monoId.gameObject.transform.position.x;
@@ -127,14 +131,16 @@ public class GameScreen  {
             }
         }
 
-        GameData.TopLeftEnemyBorder = new Vector3(leftX, topY);
-        GameData.BottomRightEnemyBorder = new Vector3(rightX, bottomY);
+        GameData.TopLeftEnemyBorder = new Vector3 ( leftX , topY , GameData.CameraDepth );
+        GameData.BottomRightEnemyBorder = new Vector3 ( rightX , bottomY , GameData.CameraDepth );
     }
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
         foreach (var button in tempScript.ButtonList)
         {
+            m_UIButtonDict.Add(button.gameObject.name, button);
+            
             PanelData tempPanel = new PanelData();
            
             tempPanel.PanelButton = button;
@@ -166,7 +172,13 @@ public class GameScreen  {
             AddListenerToButton ( tempPanel );
         }
 
-        m_GamePagePrefabBorderParent = tempScript.MenuInfoGroup[0].gameObject;
+        foreach (var text in tempScript.TextList)
+        {
+            m_UITextDict.Add(text.gameObject.name, text);
+        }
+
+        m_GamePagePrefabBorderParent = tempScript.MenuInfoGroup[1].gameObject;
+        //Debug.Log(m_GamePagePrefabBorderParent.name);
     }
     private void AddListenerToButton ( PanelData panel )
     {
@@ -179,6 +191,30 @@ public class GameScreen  {
         m_ParticleManager.NewShotSystem(panel);
     }
 
+    public void ModifyScore(int scoreToAdd)
+    {
+        GameData.CurrentScore += scoreToAdd;
+        m_UITextDict["ScoreText"].text = GameData.CurrentScore.ToString();
+    }
+
+    public void ModifyLives(int livesToAdd)
+    {
+        GameData.CurrentLives += livesToAdd;
+        m_UITextDict [ "LivesText" ].text = GameData.CurrentLives.ToString ();
+        if (GameData.CurrentLives < 1)
+        {
+            SceneManager.Instance.CurrentState = SceneManager.GameState.Stop; 
+        }
+    }
+
+    public void ResetScores()
+    {
+        GameData.CurrentScore = GameData.StartScore;
+        GameData.CurrentLives = GameData.StartLives;
+        ModifyScore(0);
+        ModifyLives(0);
+    }
+
     public void InitiateOrEmptyUI ( bool on )
     {
         if ( on ) { InitiateUI (); }
@@ -189,10 +225,22 @@ public class GameScreen  {
     {
         m_GamePageContainer.SetActive ( true );
         LoadActiveScreenPositions ();
+        ResetScores();
+        SceneManager.Instance.CurrentState = SceneManager.GameState.Play;
     }
 
     public void EmptyUI ()
     {
         m_GamePageContainer.SetActive ( false );
+    }
+
+    public void OnDrawGizmos ()
+    {
+        //if ( target != null )
+        //{
+        //Debug.Log("draw");    
+        Gizmos.color = Color.blue;
+            Gizmos.DrawLine ( GameData.TopLeftEnemyBorder , GameData.BottomRightEnemyBorder );
+        //}
     }
 }
