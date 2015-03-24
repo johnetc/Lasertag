@@ -93,6 +93,7 @@ public class EnemyManager {
 
     public void CheckObjectLocation()
     {
+        Debug.Log(EnemyObjects.Count);
         foreach ( var enemyObject in EnemyObjects )
         {
             Vector3 tempPos = enemyObject.Value.ThisObject.transform.position;
@@ -366,26 +367,22 @@ public class EnemyManager {
             EnemyObjects[id].IsDead = true;
         }
 
-        //Debug.Log ( "id " + id + " type " + componentHit + " location " + location );
-        //Debug.Log ( EnemyObjects [ id ].Facing );
-        
-        //int rot = Mathf.FloorToInt(EnemyObjects [ id ].Facing.z);
-        //int loc = (int)location;
-        //int turns = rot/90;
+    }
 
-        //for (int i = 0; i < turns; i++)
-        //{
-        //    loc = loc + 1;
-        //    if (loc > 2)
-        //    {
-        //        loc = 0;
-        //    }
-        //}
+    public void ResetEnemies()
+    {
+        List<int> toRemove = new List<int> ();
 
-        //Debug.Log("rot " + rot + " loc " + (GameData.TouchLocation)loc);
+        foreach ( var enemyObject in EnemyObjects )
+        {
+            enemyObject.Value.IsDead = true;
+        }
 
-        //location = (GameData.TouchLocation) loc;
+        Debug.Log("ResetDOne");
+    }
 
-
+    public void InitiateVariables()
+    {
+        EnemyObjects = new Dictionary<int , ObjectData> ();
     }
 }

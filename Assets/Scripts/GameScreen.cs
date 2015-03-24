@@ -140,36 +140,15 @@ public class GameScreen  {
         foreach (var button in tempScript.ButtonList)
         {
             m_UIButtonDict.Add(button.gameObject.name, button);
-            
-            PanelData tempPanel = new PanelData();
-           
-            tempPanel.PanelButton = button;
-            switch ( button.name )
-            {
-                case "LeftPanel":
-                    {
-                        tempPanel.PanelLoc = GameData.TouchLocation.Left;
-                        //Debug.Log ( SceneManager.Instance.MainCamera.WorldToViewportPoint(button.GetComponent<RectTransform> ().anchoredPosition ));
-                        break;
-                    }
-                case "RightPanel":
-                    {
-                        tempPanel.PanelLoc = GameData.TouchLocation.Right;
-                        break;
-                    }
-                case "TopPanel":
-                    {
-                        tempPanel.PanelLoc = GameData.TouchLocation.Top;
-                        break;
-                    }
-                case "BottomPanel":
-                    {
-                        tempPanel.PanelLoc = GameData.TouchLocation.Bottom;
-                        break;
-                    }
-            }
 
-            AddListenerToButton ( tempPanel );
+            if (button.gameObject.name.Contains("Panel"))
+            {
+                AddPanel(button);
+            }
+            else
+            {
+                AddListenerToButton(button);
+            }
         }
 
         foreach (var text in tempScript.TextList)
@@ -180,7 +159,47 @@ public class GameScreen  {
         m_GamePagePrefabBorderParent = tempScript.MenuInfoGroup[1].gameObject;
         //Debug.Log(m_GamePagePrefabBorderParent.name);
     }
-    private void AddListenerToButton ( PanelData panel )
+
+    private void AddListenerToButton ( Button button )
+    {
+        button.onClick.RemoveAllListeners ();
+        button.onClick.AddListener ( () => ButtonTouched( button.gameObject.name ) );
+    }
+
+    private void AddPanel(Button button)
+    {
+        PanelData tempPanel = new PanelData ();
+
+        tempPanel.PanelButton = button;
+        switch ( button.name )
+        {
+            case "LeftPanel":
+                {
+                    tempPanel.PanelLoc = GameData.TouchLocation.Left;
+                    //Debug.Log ( SceneManager.Instance.MainCamera.WorldToViewportPoint(button.GetComponent<RectTransform> ().anchoredPosition ));
+                    break;
+                }
+            case "RightPanel":
+                {
+                    tempPanel.PanelLoc = GameData.TouchLocation.Right;
+                    break;
+                }
+            case "TopPanel":
+                {
+                    tempPanel.PanelLoc = GameData.TouchLocation.Top;
+                    break;
+                }
+            case "BottomPanel":
+                {
+                    tempPanel.PanelLoc = GameData.TouchLocation.Bottom;
+                    break;
+                }
+        }
+
+        AddListenerToPanel ( tempPanel );
+    }
+
+    private void AddListenerToPanel ( PanelData panel )
     {
         panel.PanelButton.onClick.RemoveAllListeners ();
         panel.PanelButton.onClick.AddListener ( () => PanelTouched ( panel ));
@@ -189,6 +208,19 @@ public class GameScreen  {
     private void PanelTouched ( PanelData panel )
     {
         m_ParticleManager.NewShotSystem(panel);
+    }
+
+    private void ButtonTouched(string name)
+    {
+        switch (name)
+        {
+            case "ResetButton":
+            {
+                ResetGame();
+                m_UIButtonDict["ResetButton"].gameObject.SetActive(false);
+            }
+            break;
+        }
     }
 
     public void ModifyScore(int scoreToAdd)
@@ -203,16 +235,10 @@ public class GameScreen  {
         m_UITextDict [ "LivesText" ].text = GameData.CurrentLives.ToString ();
         if (GameData.CurrentLives < 1)
         {
-            SceneManager.Instance.CurrentState = SceneManager.GameState.Stop; 
+            SceneManager.Instance.CurrentState = SceneManager.GameState.Stop;
+            m_UIButtonDict [ "ResetButton" ].gameObject.SetActive ( true );
+            EnemyManager.Instance.ResetEnemies ();
         }
-    }
-
-    public void ResetScores()
-    {
-        GameData.CurrentScore = GameData.StartScore;
-        GameData.CurrentLives = GameData.StartLives;
-        ModifyScore(0);
-        ModifyLives(0);
     }
 
     public void InitiateOrEmptyUI ( bool on )
@@ -224,9 +250,31 @@ public class GameScreen  {
     public void InitiateUI ()
     {
         m_GamePageContainer.SetActive ( true );
+        ResetGame();
+        EnemyManager.Instance.ResetEnemies ();
+    }
+
+    private void ResetGame()
+    {
         LoadActiveScreenPositions ();
-        ResetScores();
+        ResetUI();
+        ResetScores ();
+        EnemyManager.Instance.InitiateVariables();
         SceneManager.Instance.CurrentState = SceneManager.GameState.Play;
+       
+    }
+
+    private void ResetUI()
+    {
+        m_UIButtonDict [ "ResetButton" ].gameObject.SetActive ( false );
+    }
+
+    public void ResetScores ()
+    {
+        GameData.CurrentScore = GameData.StartScore;
+        GameData.CurrentLives = GameData.StartLives;
+        ModifyScore ( 0 );
+        ModifyLives ( 0 );
     }
 
     public void EmptyUI ()
