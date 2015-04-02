@@ -14,7 +14,7 @@ public class GameController : MonoBehaviour
         SceneManager.Instance.Start();
 	}
 	
-	// Update is called once per frame
+	// Play is called once per frame
 	void Update () 
     {
         SceneManager.Instance.Update();

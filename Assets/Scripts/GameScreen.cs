@@ -33,9 +33,14 @@ public class GameScreen  {
     private Dictionary<string , Button> m_UIButtonDict = new Dictionary<string , Button> ();
 
     private ParticleManager m_ParticleManager;
+    public enum TypeOfUIElement
+    {
+        Panel ,
+        Button ,
+        Text
+    }
+
     
-    //public Vector3 TopLeft;
-    //public Vector3 BottomRight;
 
     public class PanelData
     {
@@ -43,9 +48,40 @@ public class GameScreen  {
         public GameData.TouchLocation PanelLoc;
     }
 
-    public void Update ()
+    //public void Update ()
+    //{
+        
+
+    //}
+
+    public void Initiate()
     {
+        Reset ();
+    }
+
+    public void Play ()
+    {
+        //Debug.Log ( "screen play" );
         m_ParticleManager.Update ();
+
+    }
+
+    public void Pause ()
+    {
+
+    }
+
+    public void Reset ()
+    {
+        Debug.Log("screen reset");
+        LoadActiveScreenPositions ();
+        ResetUI ();
+    }
+
+    public void GameOver ()
+    {
+        Debug.Log ( "screen go" );
+        m_UIButtonDict["ResetButton"].gameObject.SetActive(true);
 
     }
 
@@ -100,7 +136,7 @@ public class GameScreen  {
         m_ParticleManager = new ParticleManager();
     }
 
-    private void LoadActiveScreenPositions()
+    public void LoadActiveScreenPositions()
     {
         //Debug.Log("Load screen pos");
         RectTransform [] ids = m_GamePagePrefabBorderParent.GetComponentsInChildren<RectTransform> ();
@@ -207,7 +243,13 @@ public class GameScreen  {
 
     private void PanelTouched ( PanelData panel )
     {
-        m_ParticleManager.NewShotSystem(panel);
+        switch (SceneManager.Instance.CurrentInGameState)
+        {
+                case SceneManager.InGameState.Playing:
+                m_ParticleManager.NewShotSystem ( panel );
+                break;
+        }
+        
     }
 
     private void ButtonTouched(string name)
@@ -216,28 +258,19 @@ public class GameScreen  {
         {
             case "ResetButton":
             {
-                ResetGame();
-                m_UIButtonDict["ResetButton"].gameObject.SetActive(false);
+                SceneManager.Instance.ResetGame();
             }
             break;
         }
     }
 
-    public void ModifyScore(int scoreToAdd)
+    public void ModifyUIText(TypeOfUIElement type, string textToChange, string newText)
     {
-        GameData.CurrentScore += scoreToAdd;
-        m_UITextDict["ScoreText"].text = GameData.CurrentScore.ToString();
-    }
-
-    public void ModifyLives(int livesToAdd)
-    {
-        GameData.CurrentLives += livesToAdd;
-        m_UITextDict [ "LivesText" ].text = GameData.CurrentLives.ToString ();
-        if (GameData.CurrentLives < 1)
+        switch (type)
         {
-            SceneManager.Instance.CurrentState = SceneManager.GameState.Stop;
-            m_UIButtonDict [ "ResetButton" ].gameObject.SetActive ( true );
-            EnemyManager.Instance.ResetEnemies ();
+            case TypeOfUIElement.Text:
+            m_UITextDict[textToChange].text = newText;
+            break;
         }
     }
 
@@ -250,33 +283,14 @@ public class GameScreen  {
     public void InitiateUI ()
     {
         m_GamePageContainer.SetActive ( true );
-        ResetGame();
-        EnemyManager.Instance.ResetEnemies ();
-    }
-
-    private void ResetGame()
-    {
-        LoadActiveScreenPositions ();
-        ResetUI();
-        ResetScores ();
-        EnemyManager.Instance.InitiateVariables();
-        SceneManager.Instance.CurrentState = SceneManager.GameState.Play;
-       
+        
     }
 
     private void ResetUI()
     {
         m_UIButtonDict [ "ResetButton" ].gameObject.SetActive ( false );
     }
-
-    public void ResetScores ()
-    {
-        GameData.CurrentScore = GameData.StartScore;
-        GameData.CurrentLives = GameData.StartLives;
-        ModifyScore ( 0 );
-        ModifyLives ( 0 );
-    }
-
+    
     public void EmptyUI ()
     {
         m_GamePageContainer.SetActive ( false );

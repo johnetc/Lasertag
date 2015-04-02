@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using UnityEngine;
 using System.Collections;
 using Debug = UnityEngine.Debug;
@@ -55,16 +56,40 @@ public class EnemyManager {
     {
         LoadAssets();
     }
-
-    public void Update()
+    public void Initiate ()
+    {
+        Reset ();
+    }
+    public void Play()
     {
         CheckObjectCreation();
+        //Debug.Log ( "Play loc" );
         CheckObjectLocation();
         CheckObjectExistence();
         RotateObjects();
         MoveObjects();
         CheckInvincibility();
 
+    }
+
+    public void Pause()
+    {
+        
+    }
+
+    public void Reset()
+    {
+        
+    }
+
+    public void GameOver()
+    {
+        //Debug.Log("GO");
+        ResetEnemies ();
+        //Debug.Log ( "GO chheck obj" );
+        CheckObjectExistence ();
+        //Debug.Log ( "GO reset var" );
+        ResetVariables ();
     }
 
     public void LoadAssets()
@@ -93,18 +118,20 @@ public class EnemyManager {
 
     public void CheckObjectLocation()
     {
-        Debug.Log(EnemyObjects.Count);
-        foreach ( var enemyObject in EnemyObjects )
+        //Debug.Log ( EnemyObjects.Count );
+        
+        foreach ( var enemyObject in EnemyObjects.ToList() )
         {
+            //Debug.Log(enemyObject.Value.Id);
             Vector3 tempPos = enemyObject.Value.ThisObject.transform.position;
             if (tempPos.x < GameData.TopLeftEnemyBorder.x || tempPos.x > GameData.BottomRightEnemyBorder.x)
             {
-                GameScreen.Instance.ModifyLives ( -1 );
+                SceneManager.Instance.ModifyLives ( -1 );
                 enemyObject.Value.IsDead = true;
             }
             if ( tempPos.y < GameData.BottomRightEnemyBorder.y || tempPos.y > GameData.TopLeftEnemyBorder.y )
             {
-                GameScreen.Instance.ModifyLives ( -1 );
+                SceneManager.Instance.ModifyLives ( -1 );
                 enemyObject.Value.IsDead = true;
             }
         }
@@ -363,7 +390,7 @@ public class EnemyManager {
 
         else
         {
-            GameScreen.Instance.ModifyScore( 1 );
+            SceneManager.Instance.ModifyScore( 1 );
             EnemyObjects[id].IsDead = true;
         }
 
@@ -378,10 +405,10 @@ public class EnemyManager {
             enemyObject.Value.IsDead = true;
         }
 
-        Debug.Log("ResetDOne");
+        //Debug.Log("ResetDone");
     }
 
-    public void InitiateVariables()
+    public void ResetVariables()
     {
         EnemyObjects = new Dictionary<int , ObjectData> ();
     }
