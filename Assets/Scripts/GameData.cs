@@ -7,7 +7,7 @@ public class GameData
 {
     //game
     public static int StartScore = 0;
-    public static int StartLives = 5;
+    public static int StartLives = 500;
     public static int CurrentScore = 0;
     public static int CurrentLives = 0;
     
@@ -47,6 +47,9 @@ public class GameData
     public static float CollisionRotTotal = 90f;
     public static float InvincibilityTimerMS = 3000f;
     
+    //background
+    public static float BackgroundDepthModifier = 40;
+    public static float BackgroundPillarYNumber = 10;
     public enum TouchLocation
     {
         Top ,

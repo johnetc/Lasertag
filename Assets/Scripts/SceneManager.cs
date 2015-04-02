@@ -50,6 +50,7 @@ public class SceneManager  {
         GameData.CalculateScreenDimensions();
         GameScreen.Instance.Start();
         EnemyManager.Instance.Start();
+        BackgroundGenerator.Instance.Start();
 
         MenuMasterControl.Instance.LoadPageAssets();
         MenuMasterControl.Instance.UnloadPages();
@@ -85,6 +86,7 @@ public class SceneManager  {
             case InGameState.Initiate:
                 GameScreen.Instance.Initiate(); 
                 EnemyManager.Instance.Initiate(); 
+                BackgroundGenerator.Instance.Initiate();
                 ResetScores();
                 CurrentInGameState = InGameState.Playing;
                 break;
@@ -95,6 +97,7 @@ public class SceneManager  {
             case InGameState.Playing:
                 GameScreen.Instance.Play(); 
                 EnemyManager.Instance.Play(); 
+                BackgroundGenerator.Instance.MovePillars();
                 break;
             case InGameState.Reset:
                 GameScreen.Instance.Reset(); 
