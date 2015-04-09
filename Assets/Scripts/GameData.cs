@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 using System.Collections;
 //using UnityEngine.SocialPlatforms.Impl;
@@ -85,48 +86,50 @@ public class GameData
 
     public class ShieldArrangement
     {
-        public List<TouchLocation> Top;
-        public List<TouchLocation> Bottom;
-        public List<TouchLocation> Left;
-        public List<TouchLocation> Right;
+        //public List<TouchLocation> Top;
+        //public List<TouchLocation> Bottom;
+        //public List<TouchLocation> Left;
+        //public List<TouchLocation> Right;
+        public List<TouchLocation> Locations;
         public int Random;
 
-        public ShieldArrangement(){}
-
-        public ShieldArrangement(int t, int b, int l, int r, int rand)
+        public ShieldArrangement()
         {
-            Top = new List<TouchLocation>();
-            Bottom = new List<TouchLocation>();
-            Left = new List<TouchLocation>();
-            Right = new List<TouchLocation>();
+            Locations = new List<TouchLocation> ();
+        }
 
-            for (int i = 0; i < t; i++)
+        public ShieldArrangement(int [] tempDat)
+        {
+
+            Locations = new List<TouchLocation>();
+
+            for ( int i = 0; i < tempDat[0]; i++ )
             {
-                Top.Add(TouchLocation.Top);
+                Locations.Add ( TouchLocation.Top );
             }
-            for ( int i = 0; i < b; i++ )
+            for ( int i = 0; i < tempDat [ 1 ]; i++ )
             {
-                Bottom.Add ( TouchLocation.Bottom );
+                Locations.Add ( TouchLocation.Bottom );
             }
-            for ( int i = 0; i < l; i++ )
+            for ( int i = 0; i < tempDat [ 2 ]; i++ )
             {
-                Left.Add ( TouchLocation.Left );
-            } 
-            for ( int i = 0; i < r; i++ )
-            {
-                Right.Add ( TouchLocation.Right );
+                Locations.Add ( TouchLocation.Left );
             }
-            
-            Random = rand;
+            for ( int i = 0; i < tempDat [ 3 ]; i++ )
+            {
+                Locations.Add ( TouchLocation.Right );
+            }
+
+            Random = tempDat [ 4 ];
         }
     }
 
-    public static ShieldArrangement[] ShieldArray =
+    public static int[][] ShieldArray =
     {
-        new ShieldArrangement(0,0,0,0,1),
-        new ShieldArrangement(0,0,1,1,0),
-        new ShieldArrangement(1,1,0,0,0),
-        new ShieldArrangement(1,0,1,0,0), 
+        new []{0,0,0,0,1},
+        new []{0,0,1,1,0},
+        new []{1,1,0,0,0},
+        new []{1,0,1,0,0}, 
     };
 
 }

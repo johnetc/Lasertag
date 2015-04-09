@@ -7,6 +7,10 @@ public class Mono_Id : MonoBehaviour
     public int Id;
     public GameData.ComponentType ThisObjType;
 
+    public int[] shieldlocs =
+    {
+        0,0,0,0
+    };
     public void OnCollisionEnter (Collision collision)
     {
         //Debug.Log ( this.gameObject.name );
@@ -15,10 +19,10 @@ public class Mono_Id : MonoBehaviour
             //Debug.Log(Id);
             //Debug.Log ( "c name " + collision.gameObject.name );
             //Debug.Log ( collision.gameObject.GetComponent<Mono_Id> ().Id );
-            if (Id != collision.gameObject.GetComponent<Mono_Id>().Id)
-            {
+            //if (Id != collision.gameObject.GetComponent<Mono_Id>().Id)
+            //{
                 EnemyManager.Instance.CheckColliders(Id, ThisObjType, collision.gameObject.GetComponent<Mono_Id>().Id, collision.gameObject.GetComponent<Mono_Id>().ThisObjType);
-            }
+            //}
         }
     }
 
