@@ -97,7 +97,7 @@ public class SceneManager  {
             case InGameState.Playing:
                 GameScreen.Instance.Play(); 
                 EnemyManager.Instance.Play(); 
-                BackgroundGenerator.Instance.MovePillars();
+                BackgroundGenerator.Instance.Play();
                 break;
             case InGameState.Reset:
                 GameScreen.Instance.Reset(); 

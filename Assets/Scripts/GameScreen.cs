@@ -46,7 +46,11 @@ public class GameScreen  {
     {
         public Button PanelButton;
         public GameData.TouchLocation PanelLoc;
+        public Stopwatch TimeSincePressMS;
+        public int ConsecutiveTouches;
     }
+
+    public Dictionary<GameData.TouchLocation, PanelData> PanelList; 
 
     //public void Update ()
     //{
@@ -63,6 +67,7 @@ public class GameScreen  {
     {
         //Debug.Log ( "screen play" );
         m_ParticleManager.Update ();
+        CheckTouchTime();
 
     }
 
@@ -80,7 +85,7 @@ public class GameScreen  {
 
     public void GameOver ()
     {
-        Debug.Log ( "screen go" );
+        Debug.Log ( "screen game over" );
         m_UIButtonDict["ResetButton"].gameObject.SetActive(true);
 
     }
@@ -173,6 +178,8 @@ public class GameScreen  {
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
+        PanelList = new Dictionary<GameData.TouchLocation, PanelData>();
+        
         foreach (var button in tempScript.ButtonList)
         {
             m_UIButtonDict.Add(button.gameObject.name, button);
@@ -205,7 +212,7 @@ public class GameScreen  {
     private void AddPanel(Button button)
     {
         PanelData tempPanel = new PanelData ();
-
+        tempPanel.TimeSincePressMS = new Stopwatch();
         tempPanel.PanelButton = button;
         switch ( button.name )
         {
@@ -233,6 +240,8 @@ public class GameScreen  {
         }
 
         AddListenerToPanel ( tempPanel );
+
+        PanelList.Add(tempPanel.PanelLoc, tempPanel);
     }
 
     private void AddListenerToPanel ( PanelData panel )
@@ -243,11 +252,18 @@ public class GameScreen  {
 
     private void PanelTouched ( PanelData panel )
     {
+        if (!CheckTouchCount(panel))
+        {
+            return;
+        };
+        
         switch (SceneManager.Instance.CurrentInGameState)
         {
-                case SceneManager.InGameState.Playing:
+            case SceneManager.InGameState.Playing:
+            { 
                 m_ParticleManager.NewShotSystem ( panel );
-                break;
+            }
+            break;
         }
         
     }
@@ -262,6 +278,58 @@ public class GameScreen  {
             }
             break;
         }
+    }
+
+    private bool CheckTouchCount(PanelData panel)
+    {
+        bool isIt = false;
+        
+        if (panel.TimeSincePressMS.ElapsedMilliseconds > GameData.PanelCooldownMS)
+        {
+            panel.TimeSincePressMS.Reset ();
+            panel.TimeSincePressMS.Start ();
+            isIt = true;
+        }
+        if ( panel.TimeSincePressMS.ElapsedMilliseconds < GameData.PanelCooldownMS && panel.ConsecutiveTouches < GameData.MaxTapsOnPanel )
+        {
+            panel.TimeSincePressMS.Reset ();
+            panel.TimeSincePressMS.Start ();
+            panel.ConsecutiveTouches++;
+            isIt = true;
+        }
+        if ( panel.TimeSincePressMS.ElapsedMilliseconds < GameData.PanelCooldownMS && panel.ConsecutiveTouches >= GameData.MaxTapsOnPanel )
+        {
+            isIt = false;
+        }
+
+        return isIt;
+
+    }
+
+    private void CheckTouchTime()
+    {
+        foreach (var panelData in PanelList)
+        {
+            //Debug.Log ( panelData.Value.PanelLoc + " " + panelData.Value.TimeSincePressMS.ElapsedMilliseconds );
+            if ( panelData.Value.TimeSincePressMS.ElapsedMilliseconds > GameData.PanelCooldownMS && panelData.Value.ConsecutiveTouches == 0 )
+            {
+                panelData.Value.TimeSincePressMS.Reset ();
+
+            }
+            if ( panelData.Value.TimeSincePressMS.ElapsedMilliseconds > GameData.PanelCooldownMS && panelData.Value.ConsecutiveTouches > 0)
+            {
+                panelData.Value.ConsecutiveTouches--;
+                panelData.Value.TimeSincePressMS.Reset();
+                panelData.Value.TimeSincePressMS.Start();
+            }
+            
+        }
+
+        // debug
+        m_UITextDict["LPText"].text = PanelList[GameData.TouchLocation.Left].ConsecutiveTouches.ToString();
+        m_UITextDict [ "RPText" ].text = PanelList [ GameData.TouchLocation.Right ].ConsecutiveTouches.ToString ();
+        m_UITextDict [ "TPText" ].text = PanelList [ GameData.TouchLocation.Top ].ConsecutiveTouches.ToString ();
+        m_UITextDict [ "BPText" ].text = PanelList [ GameData.TouchLocation.Bottom ].ConsecutiveTouches.ToString ();
     }
 
     public void ModifyUIText(TypeOfUIElement type, string textToChange, string newText)

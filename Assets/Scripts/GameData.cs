@@ -11,7 +11,10 @@ public class GameData
     public static int StartLives = 500;
     public static int CurrentScore = 0;
     public static int CurrentLives = 0;
-    
+
+    public static int MaxTapsOnPanel = 5;
+    public static int PanelCooldownMS = 1000;
+
     //game area
     public static float CameraDepth = 100;
     public static float ShieldDepth = 90;
@@ -47,6 +50,7 @@ public class GameData
     public static float CollisionRotSpeed = 3f;
     public static float CollisionRotTotal = 90f;
     public static float InvincibilityTimerMS = 3000f;
+    public static float InvincibilityFlashSpeedMult = 2f;
     
     //background
     public static float BackgroundDepthModifier = 40;

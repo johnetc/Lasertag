@@ -42,9 +42,11 @@ public class EnemyManager {
         public BoxCollider BoxCol;
         public bool Rotate;
         public Vector3 Facing;
-        public Vector3 EndOfRotation;
+        public Vector3 EndOfRotation;//
         public Stopwatch InvinceTimer = new Stopwatch();
-        public Renderer Rend;
+        public Renderer MainRend;
+        public List<Renderer> ShieldRendList; 
+        public Color32 OrigColour;
     }
 
     public GameObject CubePrefab;
@@ -179,6 +181,8 @@ public class EnemyManager {
 	    tempData.Speed = GameData.StartSpeed;
 	    tempData.ThisMonoId = tempGameObject.GetComponent<Mono_Id>();
         tempData.BoxCol = tempGameObject.GetComponent<BoxCollider> ();
+	    tempData.MainRend = tempData.ThisObject.GetComponent<Renderer>();
+	    tempData.OrigColour = tempData.MainRend.material.color;
         ChooseStartPoint ( tempData.BoxCol );
         tempData.ShieldLocations = new GameData.ShieldArrangement(GameData.ShieldArray[(int)tempData.ThisType]);
         ConvertBlueprintToShields ( tempData );
@@ -259,55 +263,55 @@ public class EnemyManager {
         
         List<BoxCollider> tempColList = new List<BoxCollider>();
 
-        //Debug.Log ( tempData.ShieldLocations.Locations.Count );
+        tempData.ShieldRendList = new List<Renderer>();
         
         for (int i = 0; i < tempData.ShieldLocations.Locations.Count; i++)
         {
-            tempColList.Add ( AddShield ( tempData.ShieldLocations.Locations [ i ] , id , type , obj ) );
+            tempColList.Add ( AddShield ( tempData.ShieldLocations.Locations [ i ] , tempData ) );
         }
 
         for ( int j = 0; j < tempData.ShieldLocations.Random; j++ )
         {
             int rand = Random.Range(0, 4);
-            tempColList.Add (AddShield ( ( GameData.TouchLocation ) rand , id , type , obj ));
+            tempColList.Add (AddShield ( ( GameData.TouchLocation ) rand, tempData  ));
             tempData.ShieldLocations.Locations.Add ( ( GameData.TouchLocation ) rand );
         }
 
         tempData.ShieldCols = new List<BoxCollider>(tempColList);
     }
 
-    private BoxCollider AddShield ( GameData.TouchLocation touchLocation , int id , GameData.ObjectType type , GameObject obj )
+    private BoxCollider AddShield ( GameData.TouchLocation touchLocation , ObjectData tempData )
     {
-        
+        GameObject obj = tempData.ThisObject;
+        int id = tempData.Id;
+
         GameObject tempGameObject = GameObject.Instantiate ( ShieldPrefab , obj.transform.position , Quaternion.identity ) as GameObject;
         tempGameObject.GetComponent<Mono_Id> ().Id = id;
         tempGameObject.GetComponent<Renderer> ().material.color = Color.red;
+        tempData.ShieldRendList.Add ( tempGameObject.GetComponent<Renderer> ());
         BoxCollider col = tempGameObject.GetComponent<BoxCollider> ();
+
         switch ( touchLocation )
         {
             case GameData.TouchLocation.Top:
                 tempGameObject.transform.localScale = new Vector3 ( tempGameObject.transform.lossyScale.x , 2 , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x , obj.transform.position.y + 4f , GameData.ShieldDepth );
-                tempGameObject.transform.SetParent ( obj.transform );
                 break;
             case GameData.TouchLocation.Right:
                 tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x + 4f , obj.transform.position.y , GameData.ShieldDepth );
-                tempGameObject.transform.SetParent ( obj.transform );
                 break;
             case GameData.TouchLocation.Bottom:
                 tempGameObject.transform.localScale = new Vector3 ( tempGameObject.transform.lossyScale.x , 2 , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x , obj.transform.position.y - 4f , GameData.ShieldDepth );
-                tempGameObject.transform.SetParent ( obj.transform );
                 break;
             case GameData.TouchLocation.Left:
                 tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x - 4f , obj.transform.position.y , GameData.ShieldDepth );
-                tempGameObject.transform.SetParent ( obj.transform );
                 break;
         }
-        
 
+        tempGameObject.transform.SetParent ( obj.transform );
         return col;
     }
 
@@ -352,17 +356,37 @@ public class EnemyManager {
     {
         foreach (var enemyObject in EnemyObjects)
         {
+            if (enemyObject.Value.InvinceTimer.IsRunning)
+            {
+                enemyObject.Value.MainRend.material.color = new Color ( enemyObject.Value.OrigColour.r,
+                    enemyObject.Value.OrigColour.g,
+                    enemyObject.Value.OrigColour.b,
+                    Mathf.PingPong(Time.time * GameData.InvincibilityFlashSpeedMult, 0.5f));
+
+                foreach (var shieldRend in enemyObject.Value.ShieldRendList)
+                {
+                   shieldRend.material.color = new Color ( shieldRend.material.color.r ,
+                   shieldRend.material.color.g ,
+                   shieldRend.material.color.b ,
+                   Mathf.PingPong ( Time.time * GameData.InvincibilityFlashSpeedMult , 0.5f ) );
+                }
+            }
+            
             if (enemyObject.Value.InvinceTimer.ElapsedMilliseconds > GameData.InvincibilityTimerMS)
             {
                 enemyObject.Value.InvinceTimer.Reset();
-                //enemyObject.Value.BoxCol.enabled = true;
-                //foreach ( var shieldCol in enemyObject.Value.ShieldCols )
-                //{
-                //    shieldCol.enabled = true;
-                //}
+                
+                enemyObject.Value.MainRend.material.color = enemyObject.Value.OrigColour;
+                foreach ( var shieldRend in enemyObject.Value.ShieldRendList )
+                {
+                    shieldRend.material.color = Color.red;
+                }
             }
+           
         }
     }
+
+   
 
     public void CheckColliders ( int objOne , GameData.ComponentType objOnetype , int objTwo , GameData.ComponentType objTwotype )
     {

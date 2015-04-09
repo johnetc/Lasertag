@@ -36,7 +36,7 @@ public class BackgroundGenerator
 
     public void Initiate()
     {
-        PlacePillars();
+        //PlacePillars();
     }
 
     public void PlacePillars()
@@ -86,7 +86,7 @@ public class BackgroundGenerator
 
     public void Play ()
     {
-        
+        //MovePillars();
 
     }
 
