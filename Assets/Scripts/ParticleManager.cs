@@ -6,8 +6,21 @@ using System.Collections;
 using Debug = UnityEngine.Debug;
 
 public class ParticleManager
-
 {
+    #region singleton
+
+    public static readonly ParticleManager instance = new ParticleManager();
+
+    public static ParticleManager Instance 
+    {
+        get
+        {
+            return instance;
+        }
+    }
+
+    #endregion
+    
     public GameObject ParticleContainer;
     
     private List<ParticleSystem.Particle> ActiveParticles = new List<ParticleSystem.Particle> ();
@@ -24,11 +37,14 @@ public class ParticleManager
         public bool ReadyForDisposal;
     }
 
-    private List<ParticleBurst> m_ActiveParticleBursts = new List<ParticleBurst> ();
-    private List<ParticleBurst> m_SpentParticleBursts = new List<ParticleBurst> ();
+    private List<ParticleBurst> _ActiveParticleBursts = new List<ParticleBurst> ();
+    private List<ParticleBurst> _SpentParticleBursts = new List<ParticleBurst> ();
 
-    private GameObject m_ParticlePrefab;
+    private List<ParticleBurst> _DeathExplosionsList = new List<ParticleBurst> ();
 
+    private Dictionary<string, Material> _MaterialDict;
+    private Dictionary<string , GameObject> _ParticlePrefabDict; 
+    
     public ParticleManager()
     {
         LoadAssets();
@@ -43,14 +59,32 @@ public class ParticleManager
 
     public void LoadAssets()
     {
-        m_ParticlePrefab = Resources.Load<GameObject> ( "Particles/ParticleSystem" );
+
+        _ParticlePrefabDict = new Dictionary<string , GameObject> ();
+
+        GameObject [] tempObjArray = Resources.LoadAll<GameObject> ( "Particles" );
+
+        foreach ( var obj in tempObjArray )
+        {
+            _ParticlePrefabDict.Add ( obj.name , obj );
+        }
+
+        _MaterialDict = new Dictionary<string, Material>();
+
+        Material[] tempMatArray = Resources.LoadAll<Material>("Materials");
+
+        foreach (var material in tempMatArray)
+        {
+            _MaterialDict.Add(material.name, material);
+        }
+        
         ParticleContainer = new GameObject("Particle_Container");
         ParticleContainer.transform.position = SceneManager.Instance.MainCamera.transform.position;
     }
 
     public void NewShotSystem(GameScreen.PanelData panel)
     {
-        GameObject newParticle = GameObject.Instantiate ( m_ParticlePrefab );
+        GameObject newParticle = GameObject.Instantiate ( _ParticlePrefabDict [ GameData.ShotParticleSystem ] );
 
         newParticle.transform.SetParent ( ParticleContainer.transform );
 
@@ -101,7 +135,24 @@ public class ParticleManager
         }
         tempSys.Emit ( tempPart [ 0 ] );
         tempBurst.TheseParticles = tempPart;
-        m_ActiveParticleBursts.Add ( tempBurst );
+        _ActiveParticleBursts.Add ( tempBurst );
+    }
+
+    public void FireDeathExplosion(Vector3 pos, string col)
+    {
+        GameObject tempDeathExplosion = GameObject.Instantiate ( _ParticlePrefabDict [ GameData.DeathParticleExposion ] , pos , Quaternion.identity ) as GameObject;
+
+        tempDeathExplosion.transform.SetParent ( ParticleContainer.transform );
+
+        ParticleBurst tempParticleBurst = new ParticleBurst();
+
+        ParticleSystem tempSys = tempDeathExplosion.GetComponent<ParticleSystem> ();
+
+        tempSys.GetComponent<Renderer>().material = _MaterialDict[col];
+
+        tempParticleBurst.ThisSystem = tempSys;
+
+        _DeathExplosionsList.Add(tempParticleBurst);
     }
 
     public void ParticleSystemDebug ( ParticleSystem partSys )
@@ -134,7 +185,7 @@ public class ParticleManager
 
     public void FireScheduledParticles ()
     {
-        foreach ( var particle in m_ActiveParticleBursts )
+        foreach ( var particle in _ActiveParticleBursts )
         {
             if ( !particle.Started )
             {
@@ -142,7 +193,7 @@ public class ParticleManager
             }
         }
 
-        foreach ( var mParticleBurst in m_ActiveParticleBursts )
+        foreach ( var mParticleBurst in _ActiveParticleBursts )
         {
             //Debug.Log(mParticleBurst.StopW.ElapsedMilliseconds);
             if ( mParticleBurst.StopW.ElapsedMilliseconds > GameData.ParticleShotIntervalMS && mParticleBurst.LeftToFire > 0 )
@@ -163,21 +214,34 @@ public class ParticleManager
 
     public void CheckParticleSystemDisposal ()
     {
-        for ( int i = m_ActiveParticleBursts.Count - 1; i > -1; i-- )
+        for ( int i = _ActiveParticleBursts.Count - 1; i > -1; i-- )
         {
-            if ( m_ActiveParticleBursts [ i ].DeadParticles > m_ActiveParticleBursts [ i ].TotalToFire )
+            if ( _ActiveParticleBursts [ i ].DeadParticles > _ActiveParticleBursts [ i ].TotalToFire )
             {
-                //m_SpentParticleBursts.Add ( m_ActiveParticleBursts [ i ] );
-                m_ActiveParticleBursts [ i ].ThisSystem.gameObject.SetActive ( false );
-                Object.Destroy(m_ActiveParticleBursts[i].ThisSystem.gameObject);
-                m_ActiveParticleBursts.Remove ( m_ActiveParticleBursts [ i ] );
+                //_SpentParticleBursts.Add ( _ActiveParticleBursts [ i ] );
+                _ActiveParticleBursts [ i ].ThisSystem.gameObject.SetActive ( false );
+                Object.Destroy(_ActiveParticleBursts[i].ThisSystem.gameObject);
+                _ActiveParticleBursts.Remove ( _ActiveParticleBursts [ i ] );
             }
         }
+
+
+        for (int i = _DeathExplosionsList.Count - 1; i > -1; i--)
+        {
+            if ( !_DeathExplosionsList [ i ].ThisSystem.isPlaying)
+            {
+                //_SpentParticleBursts.Add ( _ActiveParticleBursts [ i ] );
+                _DeathExplosionsList [ i ].ThisSystem.gameObject.SetActive ( false );
+                Object.Destroy ( _DeathExplosionsList [ i ].ThisSystem.gameObject );
+                _DeathExplosionsList.Remove ( _DeathExplosionsList [ i ] );
+            }
+        }
+
     }
 
     public void CheckForDeadParticles ()
     {
-        foreach ( var mActiveParticleBurst in m_ActiveParticleBursts )
+        foreach ( var mActiveParticleBurst in _ActiveParticleBursts )
         {
             ParticleSystem.Particle [] part = new ParticleSystem.Particle [ mActiveParticleBurst.ThisSystem.maxParticles ];
             var partNo = mActiveParticleBurst.ThisSystem.GetParticles ( part );

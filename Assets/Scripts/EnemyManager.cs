@@ -100,6 +100,7 @@ public class EnemyManager {
     {
         CubePrefab = Resources.Load<GameObject>("Prefabs/Cube");
         ShieldPrefab = Resources.Load<GameObject> ( "Prefabs/Shield" );
+        
     }
 
     public void CheckObjectCreation()
@@ -132,11 +133,13 @@ public class EnemyManager {
             {
                 SceneManager.Instance.ModifyLives ( -1 );
                 enemyObject.Value.IsDead = true;
+                ParticleManager.Instance.FireDeathExplosion ( enemyObject.Value.ThisObject.transform.position , GameData.DeathParticleBorder );
             }
             if ( tempPos.y < GameData.BottomRightEnemyBorder.y || tempPos.y > GameData.TopLeftEnemyBorder.y )
             {
                 SceneManager.Instance.ModifyLives ( -1 );
                 enemyObject.Value.IsDead = true;
+                ParticleManager.Instance.FireDeathExplosion ( enemyObject.Value.ThisObject.transform.position , GameData.DeathParticleBorder );
             }
         }
     }
@@ -149,6 +152,7 @@ public class EnemyManager {
         {
             if (enemyObject.Value.IsDead)
             {
+                
                 Object.Destroy(enemyObject.Value.ThisObject);
                 toRemove.Add(enemyObject.Value.Id);
                 
@@ -456,6 +460,7 @@ public class EnemyManager {
             {
                 SceneManager.Instance.ModifyScore(1);
                 EnemyObjects[id].IsDead = true;
+                ParticleManager.Instance.FireDeathExplosion ( EnemyObjects [ id ].ThisObject.transform.position , GameData.DeathParticleShot );
             }
         }
 

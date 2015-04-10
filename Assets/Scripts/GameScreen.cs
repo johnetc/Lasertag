@@ -32,15 +32,13 @@ public class GameScreen  {
     private Dictionary<string, Text> m_UITextDict = new Dictionary<string, Text>();
     private Dictionary<string , Button> m_UIButtonDict = new Dictionary<string , Button> ();
 
-    private ParticleManager m_ParticleManager;
+    //private ParticleManager m_ParticleManager;
     public enum TypeOfUIElement
     {
         Panel ,
         Button ,
         Text
     }
-
-    
 
     public class PanelData
     {
@@ -66,7 +64,7 @@ public class GameScreen  {
     public void Play ()
     {
         //Debug.Log ( "screen play" );
-        m_ParticleManager.Update ();
+        ParticleManager.Instance.Update ();
         CheckTouchTime();
 
     }
@@ -138,7 +136,7 @@ public class GameScreen  {
         tempScript.GetPrefabComponents();
         LoadPrefabVariables ( tempScript );
 
-        m_ParticleManager = new ParticleManager();
+        //m_ParticleManager = new ParticleManager();
     }
 
     public void LoadActiveScreenPositions()
@@ -261,7 +259,7 @@ public class GameScreen  {
         {
             case SceneManager.InGameState.Playing:
             { 
-                m_ParticleManager.NewShotSystem ( panel );
+                ParticleManager.Instance.NewShotSystem ( panel );
             }
             break;
         }

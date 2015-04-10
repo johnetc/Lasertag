@@ -39,7 +39,11 @@ public class GameData
     public static Color32 ShotParticleColour = new Color32(255,255,255,255);
     public static int NumberOfParticlesPerShot = 1;
     public static float ParticleShotIntervalMS = 2000;
-    
+
+    public static string DeathParticleShot = "DeathExplosionBlue";
+    public static string DeathParticleBorder = "DeathExplosionRed";
+    public static string ShotParticleSystem = "ParticleSystem";
+    public static string DeathParticleExposion = "DeathExplosion";
 
     //enemies
     public static float MaxEnemyObjects = 7;
@@ -67,6 +71,7 @@ public class GameData
     {
         MainBody,
         Shield,
+        ParticleSystem,
     }
 
     public static void CalculateScreenDimensions()
