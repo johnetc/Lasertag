@@ -71,7 +71,10 @@ public class GameScreen  {
 
     public void Pause ()
     {
-
+        foreach (var panelData in PanelList)
+        {
+            panelData.Value.PanelButton.interactable = false;
+        }
     }
 
     public void Reset ()
@@ -194,7 +197,10 @@ public class GameScreen  {
 
         foreach (var text in tempScript.TextList)
         {
-            m_UITextDict.Add(text.gameObject.name, text);
+            if (!m_UITextDict.ContainsKey(text.gameObject.name))
+            {
+                m_UITextDict.Add(text.gameObject.name, text);
+            }
         }
 
         m_GamePagePrefabBorderParent = tempScript.MenuInfoGroup[1].gameObject;
@@ -268,11 +274,34 @@ public class GameScreen  {
 
     private void ButtonTouched(string name)
     {
+        //Debug.Log(name);
         switch (name)
         {
             case "ResetButton":
             {
                 SceneManager.Instance.ResetGame();
+            }
+            break;
+            case "PauseButton":
+            {
+                switch ( SceneManager.Instance.CurrentInGameState )
+                {
+                    case SceneManager.InGameState.Paused:
+                        SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Playing;
+                        foreach ( var panelData in PanelList )
+                        {
+                            panelData.Value.PanelButton.interactable = true;
+                        }
+                    break;
+                    case SceneManager.InGameState.Playing:
+                        SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Paused;
+                    break;
+                }
+            }
+            break;
+            case "ExitButton":
+            {
+                Application.Quit();
             }
             break;
         }
