@@ -83,15 +83,7 @@ public class GameData
         MidPoint = new Vector3(MidPointx, MidPointy, 100);
     }
 
-    public enum ObjectType
-    {
-        SingleShield ,
-        LeftRightShield ,
-        TopBottomShield,
-        LeftTopShield,
-
-        count
-    }
+    
 
     public class ShieldArrangement
     {
@@ -118,27 +110,40 @@ public class GameData
             }
             for ( int i = 0; i < tempDat [ 1 ]; i++ )
             {
-                Locations.Add ( TouchLocation.Bottom );
+                Locations.Add ( TouchLocation.Right );
             }
             for ( int i = 0; i < tempDat [ 2 ]; i++ )
             {
-                Locations.Add ( TouchLocation.Left );
+                Locations.Add ( TouchLocation.Bottom );
             }
             for ( int i = 0; i < tempDat [ 3 ]; i++ )
             {
-                Locations.Add ( TouchLocation.Right );
+                Locations.Add ( TouchLocation.Left );
             }
 
             Random = tempDat [ 4 ];
         }
     }
 
+    // arrangement of shields on bellow enemies, top, right, bottom, left
+
+    public enum ObjectType
+    {
+        SingleShield ,
+        LeftRightShield ,
+        TopBottomShield ,
+        LeftTopShield ,
+        BottomRightShield ,
+
+        count
+    }
     public static int[][] ShieldArray =
     {
         new []{0,0,0,0,1},
-        new []{0,0,1,1,0},
-        new []{1,1,0,0,0},
-        new []{1,0,1,0,0}, 
+        new []{0,1,0,1,0},
+        new []{1,0,1,0,0},
+        new []{1,0,0,1,0},
+        new []{0,1,1,0,0},
     };
 
 }
