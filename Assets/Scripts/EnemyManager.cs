@@ -426,7 +426,7 @@ public class EnemyManager {
         EnemyObjects[objTwo].InvinceTimer.Start();
 
         // if objects are not at right angles, do a 90 degree turn, else do a 180
-        Debug.Log("angle"+Mathf.DeltaAngle(EnemyObjects[objOne].Facing.z, EnemyObjects[objTwo].Facing.z));
+        //Debug.Log("angle"+Mathf.DeltaAngle(EnemyObjects[objOne].Facing.z, EnemyObjects[objTwo].Facing.z));
         if (Mathf.DeltaAngle(EnemyObjects[objOne].Facing.z, EnemyObjects[objTwo].Facing.z) < 170)
         {
             EnemyObjects [ objOne ].RotTotal = GameData.CollisionRotTotal * 2;
@@ -450,7 +450,7 @@ public class EnemyManager {
     {
         for (int i = 0; i < rotations; i++)
         {
-            Debug.Log(tempObj.ThisObject.name);
+            //Debug.Log(tempObj.ThisObject.name);
             GameData.ShieldArrangement tempArrange = new GameData.ShieldArrangement();
 
             int[] tempShieldCount = new [] {0, 0, 0, 0};
@@ -462,20 +462,20 @@ public class EnemyManager {
                 switch ( tempObj.ShieldLocations.Locations [ j ] )
                 {
                         case GameData.TouchLocation.Top:
-                        tempArrange.Locations.Add(GameData.TouchLocation.Left);
-                        tempShieldCount[3] += 1;
+                        tempArrange.Locations.Add(GameData.TouchLocation.Right);
+                        tempShieldCount[1] += 1;
                         break;
                         case GameData.TouchLocation.Right:
-                        tempArrange.Locations.Add ( GameData.TouchLocation.Top );
-                        tempShieldCount [ 0 ] += 1;
-                        break;
-                        case GameData.TouchLocation.Bottom:
-                        tempArrange.Locations.Add ( GameData.TouchLocation.Right );
-                        tempShieldCount [ 1 ] += 1;
-                        break;
-                        case GameData.TouchLocation.Left:
                         tempArrange.Locations.Add ( GameData.TouchLocation.Bottom );
                         tempShieldCount [ 2 ] += 1;
+                        break;
+                        case GameData.TouchLocation.Bottom:
+                        tempArrange.Locations.Add ( GameData.TouchLocation.Left );
+                        tempShieldCount [ 3 ] += 1;
+                        break;
+                        case GameData.TouchLocation.Left:
+                        tempArrange.Locations.Add ( GameData.TouchLocation.Top );
+                        tempShieldCount [ 0 ] += 1;
                         break;
                 }
             }

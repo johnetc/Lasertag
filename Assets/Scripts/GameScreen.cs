@@ -29,8 +29,13 @@ public class GameScreen  {
     private GameObject m_GamePageContainer;
     private GameObject m_GamePagePrefab;
     private GameObject m_GamePagePrefabBorderParent;
+
+    // UI element reference dictionaries
     private Dictionary<string, Text> m_UITextDict = new Dictionary<string, Text>();
     private Dictionary<string , Button> m_UIButtonDict = new Dictionary<string , Button> ();
+    private Dictionary<string , HorizontalOrVerticalLayoutGroup> m_UILayoutGroupDict = new Dictionary<string , HorizontalOrVerticalLayoutGroup> ();
+    private Dictionary<string , LayoutElement> m_UILayoutElementDict = new Dictionary<string, LayoutElement>(); 
+    
 
     //private ParticleManager m_ParticleManager;
     public enum TypeOfUIElement
@@ -46,9 +51,10 @@ public class GameScreen  {
         public GameData.TouchLocation PanelLoc;
         public Stopwatch TimeSincePressMS;
         public int ConsecutiveTouches;
+        public List<GameObject> UIShotRemainingObjList = new List<GameObject> (); 
     }
 
-    public Dictionary<GameData.TouchLocation, PanelData> PanelList; 
+    public Dictionary<GameData.TouchLocation, PanelData> PanelDict; 
 
     //public void Update ()
     //{
@@ -71,10 +77,7 @@ public class GameScreen  {
 
     public void Pause ()
     {
-        foreach (var panelData in PanelList)
-        {
-            panelData.Value.PanelButton.interactable = false;
-        }
+        PanelInteractivityOn(false);
     }
 
     public void Reset ()
@@ -179,7 +182,7 @@ public class GameScreen  {
 
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
-        PanelList = new Dictionary<GameData.TouchLocation, PanelData>();
+        PanelDict = new Dictionary<GameData.TouchLocation, PanelData>();
         // load all UI prefabs into dictionaries
         foreach (var button in tempScript.ButtonList)
         {
@@ -200,6 +203,22 @@ public class GameScreen  {
             if (!m_UITextDict.ContainsKey(text.gameObject.name))
             {
                 m_UITextDict.Add(text.gameObject.name, text);
+            }
+        }
+
+        foreach ( var layoutObj in tempScript.LayoutGroupList )
+        {
+            if ( !m_UILayoutGroupDict.ContainsKey ( layoutObj.gameObject.name ) )
+            {
+                m_UILayoutGroupDict.Add ( layoutObj.gameObject.name , layoutObj );
+            }
+        }
+
+        foreach ( var layoutElement in tempScript.LayoutElements )
+        {
+            if ( !m_UILayoutElementDict.ContainsKey ( layoutElement.gameObject.name ) )
+            {
+                m_UILayoutElementDict.Add ( layoutElement.gameObject.name , layoutElement );
             }
         }
 
@@ -245,7 +264,7 @@ public class GameScreen  {
 
         AddListenerToPanel ( tempPanel );
 
-        PanelList.Add(tempPanel.PanelLoc, tempPanel);
+        PanelDict.Add(tempPanel.PanelLoc, tempPanel);
     }
 
     private void AddListenerToPanel ( PanelData panel )
@@ -283,16 +302,14 @@ public class GameScreen  {
                 SceneManager.Instance.ResetGame();
             }
             break;
+
             case "PauseButton":
             {
                 switch ( SceneManager.Instance.CurrentInGameState )
                 {
                     case SceneManager.InGameState.Paused:
                         SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Playing;
-                        foreach ( var panelData in PanelList )
-                        {
-                            panelData.Value.PanelButton.interactable = true;
-                        }
+                        PanelInteractivityOn(true);
                     break;
                     case SceneManager.InGameState.Playing:
                         SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Paused;
@@ -300,11 +317,20 @@ public class GameScreen  {
                 }
             }
             break;
+
             case "ExitButton":
             {
-                Application.Quit();
+                SceneManager.Instance.QuitApplication();
             }
             break;
+        }
+    }
+
+    private void PanelInteractivityOn(bool on)
+    {
+        foreach ( var panelData in PanelDict )
+        {
+            panelData.Value.PanelButton.interactable = on;
         }
     }
 
@@ -323,9 +349,10 @@ public class GameScreen  {
             panel.TimeSincePressMS.Reset ();
             panel.TimeSincePressMS.Start ();
             panel.ConsecutiveTouches++;
+            ChangeUIShotCount ( panel , -1 );
             isIt = true;
         }
-        if ( panel.TimeSincePressMS.ElapsedMilliseconds < GameData.PanelCooldownMS && panel.ConsecutiveTouches >= GameData.MaxTapsOnPanel )
+        if ( panel.TimeSincePressMS.ElapsedMilliseconds < GameData.PanelCooldownMS && panel.ConsecutiveTouches >= GameData.MaxTapsOnPanel+1 )
         {
             isIt = false;
         }
@@ -336,7 +363,7 @@ public class GameScreen  {
 
     private void CheckTouchTime()
     {
-        foreach (var panelData in PanelList)
+        foreach (var panelData in PanelDict)
         {
             //Debug.Log ( panelData.Value.PanelLoc + " " + panelData.Value.TimeSincePressMS.ElapsedMilliseconds );
             if ( panelData.Value.TimeSincePressMS.ElapsedMilliseconds > GameData.PanelCooldownMS && panelData.Value.ConsecutiveTouches == 0 )
@@ -347,6 +374,7 @@ public class GameScreen  {
             if ( panelData.Value.TimeSincePressMS.ElapsedMilliseconds > GameData.PanelCooldownMS && panelData.Value.ConsecutiveTouches > 0)
             {
                 panelData.Value.ConsecutiveTouches--;
+                ChangeUIShotCount(panelData.Value, 1);
                 panelData.Value.TimeSincePressMS.Reset();
                 panelData.Value.TimeSincePressMS.Start();
             }
@@ -354,10 +382,22 @@ public class GameScreen  {
         }
 
         // debug
-        m_UITextDict["LPText"].text = PanelList[GameData.TouchLocation.Left].ConsecutiveTouches.ToString();
-        m_UITextDict [ "RPText" ].text = PanelList [ GameData.TouchLocation.Right ].ConsecutiveTouches.ToString ();
-        m_UITextDict [ "TPText" ].text = PanelList [ GameData.TouchLocation.Top ].ConsecutiveTouches.ToString ();
-        m_UITextDict [ "BPText" ].text = PanelList [ GameData.TouchLocation.Bottom ].ConsecutiveTouches.ToString ();
+        //m_UITextDict["LPText"].text = PanelDict[GameData.TouchLocation.Left].ConsecutiveTouches.ToString();
+        //m_UITextDict [ "RPText" ].text = PanelDict [ GameData.TouchLocation.Right ].ConsecutiveTouches.ToString ();
+        //m_UITextDict [ "TPText" ].text = PanelDict [ GameData.TouchLocation.Top ].ConsecutiveTouches.ToString ();
+        //m_UITextDict [ "BPText" ].text = PanelDict [ GameData.TouchLocation.Bottom ].ConsecutiveTouches.ToString ();
+    }
+
+    private void ChangeUIShotCount(PanelData panel, int toAdd)
+    {
+        if (toAdd == 1)
+        {
+            panel.UIShotRemainingObjList[GameData.MaxTapsOnPanel - panel.ConsecutiveTouches-1].GetComponent<Image>().enabled = true;
+        }
+        else
+        {
+            panel.UIShotRemainingObjList [ GameData.MaxTapsOnPanel - panel.ConsecutiveTouches ].GetComponent<Image> ().enabled = false;
+        }
     }
 
     public void ModifyUIText(TypeOfUIElement type, string textToChange, string newText)
@@ -365,8 +405,10 @@ public class GameScreen  {
         switch (type)
         {
             case TypeOfUIElement.Text:
-            m_UITextDict[textToChange].text = newText;
-            break;
+            {
+                m_UITextDict[textToChange].text = newText;
+            }
+                break;
         }
     }
 
@@ -379,14 +421,62 @@ public class GameScreen  {
     public void InitiateUI ()
     {
         m_GamePageContainer.SetActive ( true );
-        
     }
 
     private void ResetUI()
     {
         m_UIButtonDict [ "ResetButton" ].gameObject.SetActive ( false );
+        ResetShotPanels();
+        SetShotNumber ( GameData.MaxTapsOnPanel );
     }
-    
+
+    public void SetShotNumber(int number)
+    {
+        SetShotNumber(number,number,number,number);
+    }
+
+    public void SetShotNumber(int topNumber, int rightNumber,int bottomNumber,int leftNumber)
+    {
+        SetShotDisplay ( GameData.TouchLocation.Top , topNumber );
+        SetShotDisplay ( GameData.TouchLocation.Right , rightNumber );
+        SetShotDisplay ( GameData.TouchLocation.Bottom , bottomNumber );
+        SetShotDisplay ( GameData.TouchLocation.Left , leftNumber );
+    }
+
+    private void ResetShotPanels()
+    {
+        foreach (var panelData in PanelDict)
+        {
+            List<GameObject> tempList = panelData.Value.UIShotRemainingObjList;
+            for (int i = 1; i < tempList.Count; i++)
+            {
+                Object.Destroy(tempList[i]);
+            }
+            panelData.Value.UIShotRemainingObjList.Clear();
+        }
+    }
+
+    private void SetShotDisplay(GameData.TouchLocation locationEnum, int number)
+    {
+        string location = locationEnum.ToString(); 
+        
+        List<GameObject> tempElements = new List<GameObject> ();
+
+        PanelDict[locationEnum].UIShotRemainingObjList = tempElements;
+
+        tempElements.Add ( m_UILayoutElementDict [ location + "SingleShot" ].gameObject );
+
+        for (int i = 0; i < number-1; i++)
+        {
+            GameObject tempObj = GameObject.Instantiate ( m_UILayoutElementDict [ location+"SingleShot" ].gameObject );
+            tempObj.transform.SetParent ( m_UILayoutGroupDict [ location+"ShotRemaining" ].gameObject.transform , false );
+            tempElements.Add(tempObj);
+        }
+
+        m_UILayoutGroupDict[location + "ShotRemaining"].spacing = GameData.RemainingShotSpacing;
+
+    }
+
     public void EmptyUI ()
     {
         m_GamePageContainer.SetActive ( false );

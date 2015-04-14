@@ -11,7 +11,9 @@ public class MenuInfoSender : MonoBehaviour {
     public List<Text> TextList;
     public List<Slider> SliderList;
     public List<Toggle> ToggleList;
-    public List<VerticalLayoutGroup> VertLayoutGroup;
+    public List<HorizontalOrVerticalLayoutGroup> LayoutGroupList;
+    //public List<HorizontalLayoutGroup> HorzLayoutGroup;
+    public List<LayoutElement> LayoutElements; 
     public List<MenuInfoSender> MenuInfoGroup;
 
 	public void GetPrefabComponents () 
@@ -42,10 +44,22 @@ public class MenuInfoSender : MonoBehaviour {
             ToggleList.Add ( componentsInChild );
         }
 
-        VertLayoutGroup = new List<VerticalLayoutGroup>();
+        LayoutGroupList = new List<HorizontalOrVerticalLayoutGroup> ();
         foreach ( var componentsInChild in gameObject.GetComponentsInChildren<VerticalLayoutGroup> () )
         {
-            VertLayoutGroup.Add ( componentsInChild );
+            LayoutGroupList.Add ( componentsInChild );
+        }
+
+        //HorzLayoutGroup = new List<HorizontalLayoutGroup> ();
+        foreach ( var componentsInChild in gameObject.GetComponentsInChildren<HorizontalLayoutGroup> () )
+        {
+            LayoutGroupList.Add ( componentsInChild );
+        }
+
+        LayoutElements = new List<LayoutElement> ();
+        foreach ( var componentsInChild in gameObject.GetComponentsInChildren<LayoutElement> () )
+        {
+            LayoutElements.Add ( componentsInChild );
         }
 
         MenuInfoGroup = new List<MenuInfoSender>();

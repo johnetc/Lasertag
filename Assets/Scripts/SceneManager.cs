@@ -47,11 +47,13 @@ public class SceneManager  {
 
     public void Start ()
     {
+        // load object data
         GameData.CalculateScreenDimensions();
         GameScreen.Instance.Start();
         EnemyManager.Instance.Start();
         BackgroundGenerator.Instance.Start();
 
+        // load ui data
         MenuMasterControl.Instance.LoadPageAssets();
         MenuMasterControl.Instance.UnloadPages();
         MenuMasterControl.Instance.SwitchToPage ( MenuMasterControl.MenuPages.Game );
@@ -152,6 +154,11 @@ public class SceneManager  {
         GameData.CurrentLives = GameData.StartLives;
         ModifyScore ( 0 );
         ModifyLives ( 0 );
+    }
+
+    public void QuitApplication()
+    {
+        Application.Quit();
     }
 
     public void OnDrawGizmos() 

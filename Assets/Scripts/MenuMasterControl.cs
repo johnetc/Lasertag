@@ -60,7 +60,6 @@ public class MenuMasterControl {
         }
         
         ClearAllNormalPages();
-        
 
         switch (pageType)
         {
