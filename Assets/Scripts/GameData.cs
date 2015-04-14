@@ -50,7 +50,7 @@ public class GameData
     public static float ObjectCreationIntervalMS = 800;
     public static float ObjectScale = 20;
 
-    public static float StartSpeed = 0.15f;
+    public static float StartSpeed = 0.35f;
     public static float CollisionRotSpeed = 3f;
     public static float CollisionRotTotal = 90f;
     public static float InvincibilityTimerMS = 3000f;

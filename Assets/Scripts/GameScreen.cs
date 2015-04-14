@@ -180,7 +180,7 @@ public class GameScreen  {
     private void LoadPrefabVariables ( MenuInfoSender tempScript )
     {
         PanelList = new Dictionary<GameData.TouchLocation, PanelData>();
-        
+        // load all UI prefabs into dictionaries
         foreach (var button in tempScript.ButtonList)
         {
             m_UIButtonDict.Add(button.gameObject.name, button);
@@ -256,15 +256,16 @@ public class GameScreen  {
 
     private void PanelTouched ( PanelData panel )
     {
-        if (!CheckTouchCount(panel))
-        {
-            return;
-        };
         
         switch (SceneManager.Instance.CurrentInGameState)
         {
             case SceneManager.InGameState.Playing:
-            { 
+            {
+                if ( !CheckTouchCount ( panel ) )
+                {
+                    return;
+                }
+
                 ParticleManager.Instance.NewShotSystem ( panel );
             }
             break;

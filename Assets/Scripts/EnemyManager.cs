@@ -41,8 +41,8 @@ public class EnemyManager {
         public float Speed;
         public BoxCollider BoxCol;
         public bool Rotate;
+        public float RotTotal;
         public Vector3 Facing;
-        public Vector3 EndOfRotation;//
         public Stopwatch InvinceTimer = new Stopwatch();
         public Renderer MainRend;
         public List<Renderer> ShieldRendList; 
@@ -168,7 +168,8 @@ public class EnemyManager {
     public void CreateNewObject(Vector3 pos)
     {
         int randType = Random.Range(0, (int) GameData.ObjectType.count);
-        CreateNewObject((GameData.ObjectType)randType, pos);
+        //CreateNewObject((GameData.ObjectType)randType, pos); // todo: Add back in
+        CreateNewObject ( ( GameData.ObjectType ) 3 , pos );
     }
 
 	public void CreateNewObject(GameData.ObjectType type, Vector3 pos)
@@ -176,37 +177,43 @@ public class EnemyManager {
 		ObjectData tempData = new ObjectData();
         GameObject tempGameObject = GameObject.Instantiate(CubePrefab, pos, Quaternion.identity) as GameObject;
         tempData.Id = CurrentId;
-
         tempGameObject.transform.SetParent(UnitContainer.transform);
 	    tempGameObject.name = type + " " + CurrentId;
 	    tempData.ThisObject = tempGameObject;
 	    tempData.ThisType = type;
-	    tempData.MovingTo = ChooseMovementEndpoint();
+
+        ChooseStartPoint ( tempData );
+	    ChooseMovementEndpoint(tempData);
+        tempData.MovingTo = Vector3.up;
 	    tempData.Speed = GameData.StartSpeed;
+
 	    tempData.ThisMonoId = tempGameObject.GetComponent<Mono_Id>();
-        tempData.BoxCol = tempGameObject.GetComponent<BoxCollider> ();
+        tempData.ThisMonoId.Id = CurrentId;
+
 	    tempData.MainRend = tempData.ThisObject.GetComponent<Renderer>();
 	    tempData.OrigColour = tempData.MainRend.material.color;
-        ChooseStartPoint ( tempData.BoxCol );
+        
         tempData.ShieldLocations = new GameData.ShieldArrangement(GameData.ShieldArray[(int)tempData.ThisType]);
         ConvertBlueprintToShields ( tempData );
-	    tempData.ThisMonoId.Id = CurrentId;
+	    
 	    tempData.ThisObject.transform.localScale = Vector3.one * GameData.ObjectScale;
         EnemyObjects.Add ( CurrentId,tempData );
 	    CurrentId++;
 	}
 
-    public void ChooseStartPoint (Collider col)
+    public void ChooseStartPoint (ObjectData tempObj)
     {
-        //Debug.Log("in");
-        
+
+        BoxCollider col = tempObj.ThisObject.GetComponent<BoxCollider> ();
+
         Vector3 pos = CreatePoint();
-        col.gameObject.transform.position = pos;
-        //Debug.Log ( pos );
+        tempObj.ThisObject.transform.position = pos;
+        
         bool inObject = false;
+
         foreach (var enemyObject in EnemyObjects)
         {
-            if (enemyObject.Value.BoxCol.bounds.Intersects(col.bounds))
+            if ( enemyObject.Value.ThisObject.GetComponent<BoxCollider> ().bounds.Intersects ( col.bounds ) )
             {
                 inObject = true;
             }
@@ -214,7 +221,7 @@ public class EnemyManager {
 
         if (inObject == true)
         {
-            ChooseStartPoint ( col );
+            ChooseStartPoint ( tempObj );
         }
         else
         {
@@ -231,30 +238,31 @@ public class EnemyManager {
         return pos;
     }
 
-    public Vector3 ChooseMovementEndpoint ( )
+    public void ChooseMovementEndpoint (ObjectData tempObject )
     {
         int direction = Random.Range(0, 4);
-
-        Vector3 pos = new Vector3 ();
+        
+        Vector3 eulerAngle = new Vector3();
 
         switch (direction)
         {
             case 0:
-                pos = Vector3.up;
+                eulerAngle = new Vector3(0,180,0);
                 break;
             case 1:
-                pos = Vector3.right;
+                eulerAngle = new Vector3 ( 0 , 180 , 90 );
                 break;
             case 2:
-                pos = Vector3.down;
+                eulerAngle = new Vector3 ( 0 , 180 , 180 );
                 break;
             case 3:
-                pos = Vector3.left;
+                eulerAngle = new Vector3 ( 0 , 180 , 270 );
                 break;
 
         }
-        //pos = Vector3.zero;
-        return pos;
+
+        tempObject.Facing = eulerAngle;
+        tempObject.ThisObject.transform.eulerAngles = eulerAngle;
     }
 
     public void ConvertBlueprintToShields ( ObjectData tempData )
@@ -300,18 +308,22 @@ public class EnemyManager {
             case GameData.TouchLocation.Top:
                 tempGameObject.transform.localScale = new Vector3 ( tempGameObject.transform.lossyScale.x , 2 , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x , obj.transform.position.y + 4f , GameData.ShieldDepth );
+                tempData.ThisMonoId.shieldlocs[0] += 1;
                 break;
             case GameData.TouchLocation.Right:
                 tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x + 4f , obj.transform.position.y , GameData.ShieldDepth );
+                tempData.ThisMonoId.shieldlocs [ 1 ] += 1;
                 break;
             case GameData.TouchLocation.Bottom:
                 tempGameObject.transform.localScale = new Vector3 ( tempGameObject.transform.lossyScale.x , 2 , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x , obj.transform.position.y - 4f , GameData.ShieldDepth );
+                tempData.ThisMonoId.shieldlocs [ 2 ] += 1;
                 break;
             case GameData.TouchLocation.Left:
                 tempGameObject.transform.localScale = new Vector3 ( 2 , tempGameObject.transform.lossyScale.y , 10 );
                 tempGameObject.transform.position = new Vector3 ( obj.transform.position.x - 4f , obj.transform.position.y , GameData.ShieldDepth );
+                tempData.ThisMonoId.shieldlocs [ 3 ] += 1;
                 break;
         }
 
@@ -321,6 +333,8 @@ public class EnemyManager {
 
     public void RotateObjects()
     {
+        // rotation doesn't work if objects are facing 90 degrees different, try and change to 180
+        
         foreach ( var enemyObject in EnemyObjects )
         {
             if (enemyObject.Value.Rotate)
@@ -329,13 +343,16 @@ public class EnemyManager {
                 
                 float tempVal = enemyObject.Value.ThisObject.transform.rotation.eulerAngles.z ;
 
-                if ( tempVal >  (enemyObject.Value.Facing.z+GameData.CollisionRotTotal) || tempVal < 1)
+                if ( tempVal > ( enemyObject.Value.Facing.z + enemyObject.Value.RotTotal ) || tempVal < 1 )
                 {
-                    enemyObject.Value.ThisObject.transform.eulerAngles = new Vector3 ( 0 , 0 , Mathf.FloorToInt ( enemyObject.Value.Facing.z + GameData.CollisionRotTotal ) );
+                    enemyObject.Value.ThisObject.transform.eulerAngles = new Vector3 ( enemyObject.Value.ThisObject.transform.eulerAngles.x ,
+                        enemyObject.Value.ThisObject.transform.eulerAngles.y ,
+                        Mathf.FloorToInt ( enemyObject.Value.Facing.z + enemyObject.Value.RotTotal ) );
                     enemyObject.Value.Facing = enemyObject.Value.ThisObject.transform.eulerAngles;
                     enemyObject.Value.Rotate = false;
+                    enemyObject.Value.InvinceTimer.Reset();
                     enemyObject.Value.InvinceTimer.Start ();
-                    RealignShields(enemyObject.Value);
+
                 }
             }
         }
@@ -349,10 +366,7 @@ public class EnemyManager {
             {
                 enemyObject.Value.ThisObject.transform.Translate(enemyObject.Value.MovingTo*enemyObject.Value.Speed);
             }
-            //else
-            //{
-            //    enemyObject.Value.BoxCol.enabled = true;
-            //}
+            
         }
     }
 
@@ -404,51 +418,77 @@ public class EnemyManager {
             return;
         }
 
-        //Debug.Log ( objOne + " " + objTwo );
+        
         EnemyObjects[objOne].Rotate = true;
-        EnemyObjects[objOne].Facing = EnemyObjects[objOne].ThisObject.transform.rotation.eulerAngles;
         EnemyObjects [ objTwo ].Rotate = true;
-        EnemyObjects [ objTwo ].Facing = EnemyObjects [ objTwo ].ThisObject.transform.rotation.eulerAngles;
+
+        EnemyObjects [ objOne ].InvinceTimer.Start();
+        EnemyObjects[objTwo].InvinceTimer.Start();
+
+        // if objects are not at right angles, do a 90 degree turn, else do a 180
+        Debug.Log("angle"+Mathf.DeltaAngle(EnemyObjects[objOne].Facing.z, EnemyObjects[objTwo].Facing.z));
+        if (Mathf.DeltaAngle(EnemyObjects[objOne].Facing.z, EnemyObjects[objTwo].Facing.z) < 170)
+        {
+            EnemyObjects [ objOne ].RotTotal = GameData.CollisionRotTotal * 2;
+            EnemyObjects [ objTwo ].RotTotal = GameData.CollisionRotTotal * 2;
+            RealignShields ( EnemyObjects [ objOne ] , 2 );
+            RealignShields ( EnemyObjects [ objTwo ] , 2 );
+            
+        }
+
+        else
+        {
+            EnemyObjects [ objOne ].RotTotal = GameData.CollisionRotTotal;
+            EnemyObjects [ objTwo ].RotTotal = GameData.CollisionRotTotal;
+            RealignShields ( EnemyObjects [ objOne ] , 1 );
+            RealignShields ( EnemyObjects [ objTwo ] , 1 );
+        }
 
     }
 
-    public void RealignShields(ObjectData tempObj)
+    public void RealignShields(ObjectData tempObj, int rotations)
     {
-        GameData.ShieldArrangement tempArrange = new GameData.ShieldArrangement();
-
-        int[] tempShieldCount = new [] {0, 0, 0, 0};
-
-        tempObj.ThisMonoId.shieldlocs = new[] {0, 0, 0, 0};
-
-        for (int i = 0; i < tempObj.ShieldLocations.Locations.Count; i++)
+        for (int i = 0; i < rotations; i++)
         {
-            switch ( tempObj.ShieldLocations.Locations [ i ] )
+            Debug.Log(tempObj.ThisObject.name);
+            GameData.ShieldArrangement tempArrange = new GameData.ShieldArrangement();
+
+            int[] tempShieldCount = new [] {0, 0, 0, 0};
+
+            tempObj.ThisMonoId.shieldlocs = new[] {0, 0, 0, 0};
+
+            for (int j = 0; j < tempObj.ShieldLocations.Locations.Count; j++)
             {
-                    case GameData.TouchLocation.Top:
-                    tempArrange.Locations.Add(GameData.TouchLocation.Left);
-                    tempShieldCount[3] += 1;
-                    break;
-                    case GameData.TouchLocation.Right:
-                    tempArrange.Locations.Add ( GameData.TouchLocation.Top );
-                    tempShieldCount [ 0 ] += 1;
-                    break;
-                    case GameData.TouchLocation.Bottom:
-                    tempArrange.Locations.Add ( GameData.TouchLocation.Right );
-                    tempShieldCount [ 1 ] += 1;
-                    break;
-                    case GameData.TouchLocation.Left:
-                    tempArrange.Locations.Add ( GameData.TouchLocation.Bottom );
-                    tempShieldCount [ 2 ] += 1;
-                    break;
+                switch ( tempObj.ShieldLocations.Locations [ j ] )
+                {
+                        case GameData.TouchLocation.Top:
+                        tempArrange.Locations.Add(GameData.TouchLocation.Left);
+                        tempShieldCount[3] += 1;
+                        break;
+                        case GameData.TouchLocation.Right:
+                        tempArrange.Locations.Add ( GameData.TouchLocation.Top );
+                        tempShieldCount [ 0 ] += 1;
+                        break;
+                        case GameData.TouchLocation.Bottom:
+                        tempArrange.Locations.Add ( GameData.TouchLocation.Right );
+                        tempShieldCount [ 1 ] += 1;
+                        break;
+                        case GameData.TouchLocation.Left:
+                        tempArrange.Locations.Add ( GameData.TouchLocation.Bottom );
+                        tempShieldCount [ 2 ] += 1;
+                        break;
+                }
             }
+
+            tempObj.ShieldLocations = tempArrange;
+            tempObj.ThisMonoId.shieldlocs = tempShieldCount;
+
         }
-        tempObj.ShieldLocations = tempArrange;
-        tempObj.ThisMonoId.shieldlocs = tempShieldCount;
     }
 
     public void CheckHit(int id, GameData.ComponentType componentHit, GameData.TouchLocation location)
     {
-        if (componentHit != GameData.ComponentType.MainBody)
+        if ( componentHit != GameData.ComponentType.MainBody || EnemyObjects [ id ] .InvinceTimer.IsRunning)
         {
             return;
         }
