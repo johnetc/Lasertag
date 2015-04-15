@@ -46,8 +46,13 @@ public class GameData
 
     public static string DeathParticleShot = "DeathExplosionBlue";
     public static string DeathParticleBorder = "DeathExplosionRed";
-    public static string ShotParticleSystem = "ParticleSystem";
     public static string DeathParticleExposion = "DeathExplosion";
+
+    public enum ParticleShotType
+    {
+        BasicShot ,
+        BubbleShot
+    }
 
     //enemies
     public static float MaxEnemyObjects = 7;
@@ -78,6 +83,7 @@ public class GameData
         ParticleSystem,
     }
 
+    
     public static void CalculateScreenDimensions()
     {
         TopLeftPoint = SceneManager.Instance.MainCamera.ViewportToWorldPoint(new Vector3(0, 1, SceneManager.Instance.MainCamera.nearClipPlane));

@@ -5,6 +5,7 @@ using System.Collections;
 public class ParticleColliderMono : MonoBehaviour
 {
 
+    public GameData.ParticleShotType ThisParticleShotType = GameData.ParticleShotType.BubbleShot;
     public GameData.TouchLocation thisLocation;
     private ParticleCollisionEvent [] collisionEvents = new ParticleCollisionEvent [ 1 ];
 
@@ -36,8 +37,14 @@ public class ParticleColliderMono : MonoBehaviour
                 ////Debug.Log ( other.transform.position + " " + collisionEvents [ i ].intersection );
                 //Vector3 force = collisionEvents [ i ].velocity * 1;
                 ////other.GetComponent<Rigidbody> ().AddForceAtPosition( force, pos );
-                EnemyManager.Instance.CheckHit ( other.GetComponent<Mono_Id> ().Id , other.GetComponent<Mono_Id> ().ThisObjType , thisLocation );
-
+                if (EnemyManager.Instance.CheckHit ( other.GetComponent<Mono_Id> ().Id , other.GetComponent<Mono_Id> ().ThisObjType , thisLocation ));
+                {
+                    
+                }
+                if (ThisParticleShotType == GameData.ParticleShotType.BasicShot)
+                {
+                    Destroy(this.gameObject);
+                }
                 //Debug.Log ( collisionEvents [ i ].collider.name );
                 ////Destroy(this.gameObject);
             }

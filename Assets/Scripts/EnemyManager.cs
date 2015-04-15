@@ -481,11 +481,11 @@ public class EnemyManager {
         }
     }
 
-    public void CheckHit(int id, GameData.ComponentType componentHit, GameData.TouchLocation location)
+    public bool CheckHit(int id, GameData.ComponentType componentHit, GameData.TouchLocation location)
     {
         if ( componentHit != GameData.ComponentType.MainBody || EnemyObjects [ id ] .InvinceTimer.IsRunning)
         {
-            return;
+            return false;
         }
 
         else
@@ -496,7 +496,9 @@ public class EnemyManager {
                 SceneManager.Instance.ModifyScore(1);
                 EnemyObjects[id].IsDead = true;
                 ParticleManager.Instance.FireDeathExplosion ( EnemyObjects [ id ].ThisObject.transform.position , GameData.DeathParticleShot );
+                return true;
             }
+            return false;
         }
 
     }

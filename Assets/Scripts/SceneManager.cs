@@ -40,6 +40,8 @@ public class SceneManager  {
 
     public GameState CurrentState;
 
+    public GameData.ParticleShotType CurrentParticleShotType;
+
     public void Awake ()
     {
         TheEventSystem = GameObject.FindObjectOfType<EventSystem>();
@@ -60,6 +62,7 @@ public class SceneManager  {
 
         CurrentState = GameState.InGame;
         CurrentInGameState = InGameState.Initiate;
+        CurrentParticleShotType = GameData.ParticleShotType.BasicShot;
     }
     
 

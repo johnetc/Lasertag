@@ -284,8 +284,7 @@ public class GameScreen  {
                 {
                     return;
                 }
-
-                ParticleManager.Instance.NewShotSystem ( panel );
+                ParticleManager.Instance.NewShot( panel.PanelLoc );
             }
             break;
         }
