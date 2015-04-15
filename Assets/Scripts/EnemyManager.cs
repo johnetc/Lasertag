@@ -109,11 +109,6 @@ public class EnemyManager {
         {
             m_EnemyGenerationTimer.Start();
         }
-        //if (m_EnemyGenerationTimer.ElapsedMilliseconds > GameData.ObjectCreationIntervalMS)
-        //{
-        //    CreateNewObject( Vector3.zero);
-        //    m_EnemyGenerationTimer.Reset();
-        //}
         if ( m_EnemyGenerationTimer.ElapsedMilliseconds > GameData.ObjectCreationIntervalMS && EnemyObjects.Count < GameData.MaxEnemyObjects)
         {
             CreateNewObject ( Vector3.zero );
@@ -168,8 +163,8 @@ public class EnemyManager {
     public void CreateNewObject(Vector3 pos)
     {
         int randType = Random.Range(0, (int) GameData.ObjectType.count);
-        //CreateNewObject((GameData.ObjectType)randType, pos); // todo: Add back in
-        CreateNewObject ( ( GameData.ObjectType ) 3 , pos );
+        CreateNewObject ( ( GameData.ObjectType ) randType , pos ); 
+        //CreateNewObject ( ( GameData.ObjectType ) 3 , pos );
     }
 
 	public void CreateNewObject(GameData.ObjectType type, Vector3 pos)

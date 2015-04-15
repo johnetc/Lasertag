@@ -140,7 +140,7 @@ public class ParticleManager
 
     public void FireDeathExplosion(Vector3 pos, string col)
     {
-        GameObject tempDeathExplosion = GameObject.Instantiate ( _ParticlePrefabDict [ GameData.DeathParticleExposion ] , pos , Quaternion.identity ) as GameObject;
+        GameObject tempDeathExplosion = GameObject.Instantiate ( _ParticlePrefabDict [ col ] , pos , Quaternion.identity ) as GameObject;
 
         tempDeathExplosion.transform.SetParent ( ParticleContainer.transform );
 
@@ -148,7 +148,7 @@ public class ParticleManager
 
         ParticleSystem tempSys = tempDeathExplosion.GetComponent<ParticleSystem> ();
 
-        tempSys.GetComponent<Renderer>().material = _MaterialDict[col];
+        //tempSys.GetComponent<Renderer>().material = _MaterialDict[col];
 
         tempParticleBurst.ThisSystem = tempSys;
 
