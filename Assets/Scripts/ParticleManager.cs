@@ -9,7 +9,7 @@ public class ParticleManager
 {
     #region singleton
 
-    public static readonly ParticleManager instance = new ParticleManager();
+    private static readonly ParticleManager instance = new ParticleManager();
 
     public static ParticleManager Instance 
     {
@@ -24,8 +24,8 @@ public class ParticleManager
     public GameObject ParticleContainer;
 
     private GameObject _NewParticle;
-    private List<ParticleSystem.Particle> ActiveParticles = new List<ParticleSystem.Particle> ();
-
+    
+    private BaseShotType CurrentShotClass;
     private class ParticleBurst
     {
         public int LeftToFire;
@@ -39,26 +39,37 @@ public class ParticleManager
     }
 
     private List<ParticleBurst> _ActiveAdvParticleBursts = new List<ParticleBurst> ();
-    //private List<ParticleBurst> _SpentAdvParticleBursts = new List<ParticleBurst> ();
-
     private List<ParticleBurst> _ActiveBasicParticleBursts = new List<ParticleBurst> ();
-    //private List<GameObject> _SpentBasicParticleBursts = new List<GameObject> ();
-
     private List<ParticleBurst> _DeathExplosionsList = new List<ParticleBurst> ();
 
     private Dictionary<string, Material> _MaterialDict;
-    private Dictionary<string , GameObject> _ParticlePrefabDict; 
-    
-    public ParticleManager()
+    private Dictionary<string , GameObject> _ParticlePrefabDict;
+
+    public void Preload ()
     {
-        LoadAssets();
+        LoadAssets ();
     }
 
-    public void Update()
+    public void Initiate()
+    {
+        Reset();
+    }
+
+    public void Play ()
     {
         FireScheduledParticles ();
         CheckParticleSystemDisposal ();
         CheckAdvForDeadParticles ();
+    }
+
+    public void Pause()
+    {
+        ParticlePause(true);
+    }
+
+    public void Unpaused ()
+    {
+        ParticlePause(false);
     }
 
     public void LoadAssets()
@@ -66,22 +77,22 @@ public class ParticleManager
 
         _ParticlePrefabDict = new Dictionary<string , GameObject> ();
 
-        GameObject [] tempObjArray = Resources.LoadAll<GameObject> ( "Particles" );
-
-        foreach ( var obj in tempObjArray )
-        {
-            _ParticlePrefabDict.Add ( obj.name , obj );
-        }
-
         _MaterialDict = new Dictionary<string, Material>();
 
-        Material[] tempMatArray = Resources.LoadAll<Material>("Materials");
+        var resources = Resources.LoadAll ( "Particles" );
 
-        foreach (var material in tempMatArray)
+        foreach ( var resource in resources )
         {
-            _MaterialDict.Add(material.name, material);
+            if ( resource is GameObject )
+            {
+                _ParticlePrefabDict.Add ( resource.name , ( GameObject ) resource );
+            }
+            if ( resource is Material )
+            {
+                _MaterialDict.Add ( resource.name , ( Material ) resource );
+            }
         }
-        
+
         ParticleContainer = new GameObject("Particle_Container");
         ParticleContainer.transform.position = SceneManager.Instance.MainCamera.transform.position;
     }
@@ -90,23 +101,25 @@ public class ParticleManager
     {
         switch (SceneManager.Instance.CurrentParticleShotType)
         {
-            case GameData.ParticleShotType.BasicShot:
+            case GameData.ParticleShotType.LaserShot:
             {
-               NewShotSystemBasic(loc); 
+                CurrentShotClass = new LaserShot();
+                NewShotSystemBasic(loc, CurrentShotClass); 
             }
             break;
 
             case GameData.ParticleShotType.BubbleShot:
             {
-                NewShotSystemAdv(loc);
+                CurrentShotClass = new BubbleShot();
+                NewShotSystemAdv(loc, CurrentShotClass);
             }
             break;
         }
     }
 
-    public void NewShotSystemBasic ( GameData.TouchLocation loc )
+    public void NewShotSystemBasic ( GameData.TouchLocation loc, BaseShotType shotClass )
     {
-        string prefabType = SceneManager.Instance.CurrentParticleShotType.ToString();
+        string prefabType = shotClass.ShotPrefabName;
         
         switch ( loc )
         {
@@ -143,7 +156,7 @@ public class ParticleManager
 
         tempBurst.ThisSystem = tempSys;
 
-        _NewParticle.GetComponent<ParticleColliderMono> ().ThisParticleShotType = GameData.ParticleShotType.BasicShot;
+        _NewParticle.GetComponent<ParticleColliderMono> ().ThisParticleShotType = shotClass.ShotType;
 
         _NewParticle.transform.SetParent ( ParticleContainer.transform );
 
@@ -153,9 +166,9 @@ public class ParticleManager
 
     }
 
-    public void NewShotSystemAdv ( GameData.TouchLocation loc )
+    public void NewShotSystemAdv ( GameData.TouchLocation loc , BaseShotType shotClass )
     {
-        string prefabType = SceneManager.Instance.CurrentParticleShotType.ToString ();
+        string prefabType = shotClass.ShotPrefabName;
 
         GameObject newParticle = GameObject.Instantiate ( _ParticlePrefabDict [ prefabType ] );
 
@@ -169,7 +182,7 @@ public class ParticleManager
 
         tempBurst.ThisSystem = tempSys;
 
-        ParticleSystem.Particle [] tempPart = new ParticleSystem.Particle [ GameData.NumberOfParticlesPerShot ];
+        ParticleSystem.Particle [] tempPart = new ParticleSystem.Particle [ shotClass.NumberOfParticlesPerShot ];
 
         tempBurst.LeftToFire = tempPart.Count () - 1;
         tempBurst.TotalToFire = tempBurst.LeftToFire;
@@ -178,28 +191,28 @@ public class ParticleManager
         {
             case GameData.TouchLocation.Left:
                 {
-                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.right * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.right, shotClass );
 
                     newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Left;
                     break;
                 }
             case GameData.TouchLocation.Right:
                 {
-                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.left * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.left , shotClass );
 
                     newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Right;
                     break;
                 }
             case GameData.TouchLocation.Top:
                 {
-                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.down * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.down , shotClass );
 
                     newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Top;
                     break;
                 }
             case GameData.TouchLocation.Bottom:
                 {
-                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.up * GameData.ShotParticleVelocityMult , GameData.ShotParticleSize , GameData.ShotParticleLifetime , GameData.ShotParticleColour );
+                    tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.up , shotClass );
 
                     newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Bottom;
                     break;
@@ -239,18 +252,18 @@ public class ParticleManager
 
     }
 
-    public ParticleSystem.Particle [] ParticleDefiner ( Vector3 pos , Vector3 vel , float size , float life , Color32 colour )
+    public ParticleSystem.Particle [] ParticleDefiner ( Vector3 pos, Vector3 vector, BaseShotType shotClass )
     {
         ParticleSystem.Particle [] particles = new ParticleSystem.Particle [ GameData.NumberOfParticlesPerShot ];
 
         for ( int i = 0; i < particles.Count (); i++ )
         {
             particles [ i ].position = pos;
-            particles [ i ].velocity = vel;
-            particles [ i ].size = size;
-            particles [ i ].lifetime = life;
-            particles [ i ].startLifetime = life;
-            particles [ i ].color = colour;
+            particles [ i ].velocity = vector * shotClass.ShotParticleVelocityMult;
+            particles [ i ].size = shotClass.ShotParticleSize;
+            particles [ i ].lifetime = shotClass.ShotParticleLifetime;
+            particles [ i ].startLifetime = shotClass.ShotParticleLifetime;
+            particles [ i ].color = shotClass.ShotParticleColour;
         }
 
         return particles;
@@ -364,5 +377,65 @@ public class ParticleManager
 
         return false;
     }
-    
+
+    public void ParticlePause(bool pause)
+    {
+        if (pause)
+        {
+            for ( int i = _ActiveAdvParticleBursts.Count - 1; i > -1; i-- )
+            {
+                _ActiveAdvParticleBursts [ i ].ThisSystem.Pause();
+            }
+
+
+            for ( int i = _DeathExplosionsList.Count - 1; i > -1; i-- )
+            {
+               _DeathExplosionsList [ i ].ThisSystem.Pause();
+            }
+
+            for ( int i = _ActiveBasicParticleBursts.Count - 1; i > -1; i-- )
+            {
+                if ( _ActiveBasicParticleBursts [ i ].ThisSystem == null )
+                {
+                    return;
+                }
+                
+                _ActiveBasicParticleBursts [ i ].ThisSystem.Pause();
+            }
+        }
+        else
+        {
+            for ( int i = _ActiveAdvParticleBursts.Count - 1; i > -1; i-- )
+            {
+                _ActiveAdvParticleBursts [ i ].ThisSystem.Play(); 
+            }
+
+
+            for ( int i = _DeathExplosionsList.Count - 1; i > -1; i-- )
+            {
+                _DeathExplosionsList [ i ].ThisSystem.Play ();
+            }
+
+            for ( int i = _ActiveBasicParticleBursts.Count - 1; i > -1; i-- )
+            {
+                if ( _ActiveBasicParticleBursts [ i ].ThisSystem == null )
+                {
+                    return;
+                }
+
+                if ( !_ActiveBasicParticleBursts [ i ].ThisSystem.isPlaying )
+                {
+                    _ActiveBasicParticleBursts [ i ].ThisSystem.Play ();
+                }
+            }
+        }
+    }
+
+    public void Reset()
+    {
+        _ActiveAdvParticleBursts = new List<ParticleBurst> ();
+        _ActiveBasicParticleBursts = new List<ParticleBurst> ();
+        _DeathExplosionsList = new List<ParticleBurst> ();
+    }
+
 }

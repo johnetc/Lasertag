@@ -24,7 +24,7 @@ public class BackgroundGenerator
     private float _HeightOfPillar;
     public GameObject BGContainer;
     private Dictionary< Vector2, GameObject> _PillarDict; 
-    public void Start ()
+    public void Preload ()
     {
         LoadAssets ();
     }

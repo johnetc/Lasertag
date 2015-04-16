@@ -26,16 +26,17 @@ public class GameScreen  {
     // rename singleton instance variable
     public MenuMasterControl.MasterMenuDelegate InitiateUIDel;
 
-    private GameObject m_GamePageContainer;
-    private GameObject m_GamePagePrefab;
-    private GameObject m_GamePagePrefabBorderParent;
+    //private GameObject m_GamePageContainer;
+    //private GameObject m_GamePagePrefab;
+    //private GameObject m_GamePagePrefabBorderParent;
+    private Dictionary<string, GameObject> _PrefabBlueprintDict;
+    private Dictionary<string , GameObject> _GameobjUIDict; 
 
     // UI element reference dictionaries
     private Dictionary<string, Text> m_UITextDict = new Dictionary<string, Text>();
     private Dictionary<string , Button> m_UIButtonDict = new Dictionary<string , Button> ();
     private Dictionary<string , HorizontalOrVerticalLayoutGroup> m_UILayoutGroupDict = new Dictionary<string , HorizontalOrVerticalLayoutGroup> ();
     private Dictionary<string , LayoutElement> m_UILayoutElementDict = new Dictionary<string, LayoutElement>(); 
-    
 
     //private ParticleManager m_ParticleManager;
     public enum TypeOfUIElement
@@ -54,13 +55,8 @@ public class GameScreen  {
         public List<GameObject> UIShotRemainingObjList = new List<GameObject> (); 
     }
 
-    public Dictionary<GameData.TouchLocation, PanelData> PanelDict; 
-
-    //public void Update ()
-    //{
-        
-
-    //}
+    public Dictionary<GameData.TouchLocation, PanelData> PanelDict;
+    
 
     public void Initiate()
     {
@@ -69,15 +65,17 @@ public class GameScreen  {
 
     public void Play ()
     {
-        //Debug.Log ( "screen play" );
-        ParticleManager.Instance.Update ();
         CheckTouchTime();
-
     }
 
     public void Pause ()
     {
         PanelInteractivityOn(false);
+    }
+
+    public void Unpaused ()
+    {
+        PanelInteractivityOn ( true );
     }
 
     public void Reset ()
@@ -94,11 +92,39 @@ public class GameScreen  {
 
     }
 
-    public void Start()
+    public void LoadUIAssets ()
     {
-        ResizeSpawnArea();
+        _PrefabBlueprintDict = new Dictionary<string, GameObject>();
+        _GameobjUIDict = new Dictionary<string , GameObject> ();
+
+        var resources = Resources.LoadAll ( "UI" );
+
+        foreach ( var resource in resources )
+        {
+            if ( resource is GameObject )
+            {
+                _PrefabBlueprintDict.Add ( resource.name , ( GameObject ) resource );
+            }
+        }
+
+        _GameobjUIDict.Add ( GameData.MainScreenContainer , new GameObject ( GameData.MainScreenContainer ) );
+        _GameobjUIDict.Add ( GameData.MainScreen , GameObject.Instantiate ( _PrefabBlueprintDict [ GameData.MainScreen ] ) );
+
+        _GameobjUIDict [ GameData.MainScreenContainer ].transform.SetParent ( MenuMasterControl.Instance.MenuContainer.transform );
+        _GameobjUIDict [ GameData.MainScreen ].transform.SetParent ( _GameobjUIDict [ GameData.MainScreenContainer ].transform.transform );
+
+        _GameobjUIDict [ GameData.MainScreen ].GetComponent<Canvas> ().worldCamera = SceneManager.Instance.MainCamera;
+
+        InitiateUIDel = InitiateOrEmptyUI;
+
+        MenuMasterControl.Instance.RegisterPage ( InitiateUIDel , MenuMasterControl.MenuPages.Game );
+
+        MenuInfoSender tempScript = _GameobjUIDict [ GameData.MainScreen ].GetComponent<MenuInfoSender> ();
+        tempScript.GetPrefabComponents();
+        LoadPrefabVariables ( tempScript );
+
+        //m_ParticleManager = new ParticleManager();
     }
-    
     public void ResizeSpawnArea ()
     {
         Vector3 tempSpawnTopLeft = ( GameData.TopLeftPoint - GameData.MidPoint );
@@ -124,31 +150,10 @@ public class GameScreen  {
         //sphere.transform.position = new Vector3 ( GameData.BottomRightSpawnArea.x , GameData.TopLeftSpawnArea.y , GameData.CameraDepth );
 
     }
-
-
-    public void LoadUIAssets ()
-    {
-        m_GamePageContainer = new GameObject ( "GameScreen" );
-        m_GamePageContainer.transform.SetParent ( MenuMasterControl.Instance.MenuContainer.transform );
-        m_GamePagePrefab = ( GameObject ) GameObject.Instantiate ( Resources.Load<GameObject> ( "Prefabs/MainGameScreen" ) );
-        m_GamePagePrefab.transform.SetParent ( m_GamePageContainer.transform );
-        m_GamePagePrefab.GetComponent<Canvas>().worldCamera = SceneManager.Instance.MainCamera;
-
-        InitiateUIDel = InitiateOrEmptyUI;
-
-        MenuMasterControl.Instance.RegisterPage ( InitiateUIDel , MenuMasterControl.MenuPages.Game );
-
-        MenuInfoSender tempScript = m_GamePagePrefab.GetComponent<MenuInfoSender>();
-        tempScript.GetPrefabComponents();
-        LoadPrefabVariables ( tempScript );
-
-        //m_ParticleManager = new ParticleManager();
-    }
-
     public void LoadActiveScreenPositions()
     {
         //Debug.Log("Load screen pos");
-        RectTransform [] ids = m_GamePagePrefabBorderParent.GetComponentsInChildren<RectTransform> ();
+        RectTransform [] ids = _GameobjUIDict["GamePagePrefabBorderParent"].GetComponentsInChildren<RectTransform> ();
 
         float leftX = ids [ 0 ].gameObject.transform.position.x;
         float rightX = ids [ 0 ].gameObject.transform.position.x; 
@@ -221,9 +226,7 @@ public class GameScreen  {
                 m_UILayoutElementDict.Add ( layoutElement.gameObject.name , layoutElement );
             }
         }
-
-        m_GamePagePrefabBorderParent = tempScript.MenuInfoGroup[1].gameObject;
-        //Debug.Log(m_GamePagePrefabBorderParent.name);
+        _GameobjUIDict.Add( "GamePagePrefabBorderParent",   tempScript.MenuInfoGroup [ 1 ].gameObject);
     }
 
     private void AddListenerToButton ( Button button )
@@ -307,8 +310,7 @@ public class GameScreen  {
                 switch ( SceneManager.Instance.CurrentInGameState )
                 {
                     case SceneManager.InGameState.Paused:
-                        SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Playing;
-                        PanelInteractivityOn(true);
+                        SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Unpaused;
                     break;
                     case SceneManager.InGameState.Playing:
                         SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Paused;
@@ -419,7 +421,7 @@ public class GameScreen  {
 
     public void InitiateUI ()
     {
-        m_GamePageContainer.SetActive ( true );
+        _GameobjUIDict [ GameData.MainScreenContainer ].SetActive ( true );
     }
 
     private void ResetUI()
@@ -478,7 +480,7 @@ public class GameScreen  {
 
     public void EmptyUI ()
     {
-        m_GamePageContainer.SetActive ( false );
+        _GameobjUIDict [ GameData.MainScreenContainer ].SetActive ( false );
     }
 
     public void OnDrawGizmos ()

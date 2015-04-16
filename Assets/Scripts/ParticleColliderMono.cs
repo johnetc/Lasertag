@@ -41,7 +41,7 @@ public class ParticleColliderMono : MonoBehaviour
                 {
                     
                 }
-                if (ThisParticleShotType == GameData.ParticleShotType.BasicShot)
+                if (ThisParticleShotType == GameData.ParticleShotType.LaserShot)
                 {
                     Destroy(this.gameObject);
                 }

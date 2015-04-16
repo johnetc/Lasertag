@@ -49,14 +49,15 @@ public class EnemyManager {
         public Color32 OrigColour;
     }
 
-    public GameObject CubePrefab;
-    public GameObject ShieldPrefab;
+    private Dictionary<string, GameObject> _GameobjDict;
+    private Dictionary<string , Material> _MaterialDict; 
+
 
     public int CurrentId = 0;
 
     private Stopwatch m_EnemyGenerationTimer = new Stopwatch();
 
-    public void Start ()
+    public void Preload ()
     {
         LoadAssets();
     }
@@ -81,6 +82,10 @@ public class EnemyManager {
         
     }
 
+    public void Unpaused()
+    {
+        
+    }
     public void Reset()
     {
         
@@ -98,9 +103,23 @@ public class EnemyManager {
 
     public void LoadAssets()
     {
-        CubePrefab = Resources.Load<GameObject>("Prefabs/Cube");
-        ShieldPrefab = Resources.Load<GameObject> ( "Prefabs/Shield" );
+        _GameobjDict = new Dictionary<string , GameObject> ();
+        _MaterialDict = new Dictionary<string, Material>();
         
+        var resources = Resources.LoadAll("Enemies");
+        
+        foreach (var resource in resources)
+        {
+            if (resource is GameObject)
+            {
+                _GameobjDict.Add(resource.name, (GameObject)resource);
+            }
+            if ( resource is Material )
+            {
+                _MaterialDict.Add ( resource.name , ( Material ) resource );
+            }
+        }
+
     }
 
     public void CheckObjectCreation()
@@ -170,7 +189,7 @@ public class EnemyManager {
 	public void CreateNewObject(GameData.ObjectType type, Vector3 pos)
 	{
 		ObjectData tempData = new ObjectData();
-        GameObject tempGameObject = GameObject.Instantiate(CubePrefab, pos, Quaternion.identity) as GameObject;
+        GameObject tempGameObject = GameObject.Instantiate(_GameobjDict["Enemy"], pos, Quaternion.identity) as GameObject;
         tempData.Id = CurrentId;
         tempGameObject.transform.SetParent(UnitContainer.transform);
 	    tempGameObject.name = type + " " + CurrentId;
@@ -292,7 +311,7 @@ public class EnemyManager {
         GameObject obj = tempData.ThisObject;
         int id = tempData.Id;
 
-        GameObject tempGameObject = GameObject.Instantiate ( ShieldPrefab , obj.transform.position , Quaternion.identity ) as GameObject;
+        GameObject tempGameObject = GameObject.Instantiate ( _GameobjDict [ "Shield" ] , obj.transform.position , Quaternion.identity ) as GameObject;
         tempGameObject.GetComponent<Mono_Id> ().Id = id;
         tempGameObject.GetComponent<Renderer> ().material.color = Color.red;
         tempData.ShieldRendList.Add ( tempGameObject.GetComponent<Renderer> ());
@@ -496,6 +515,8 @@ public class EnemyManager {
                 SceneManager.Instance.ModifyScore(1);
                 EnemyObjects[id].IsDead = true;
                 ParticleManager.Instance.FireDeathExplosion ( EnemyObjects [ id ].ThisObject.transform.position , GameData.DeathParticleShot );
+                int temp = Random.Range(0, 2);
+                ItemManager.Instance.CreateItem((GameData.ItemTypes)temp, EnemyObjects[id].ThisObject.transform.position);
                 return true;
             }
             return false;

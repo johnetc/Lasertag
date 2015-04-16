@@ -6,7 +6,7 @@ using System.Collections;
 
 public class GameData
 {
-    //game
+    //player game variables
     public static int StartScore = 0;
     public static int StartLives = 500;
     public static int CurrentScore = 0;
@@ -31,12 +31,32 @@ public class GameData
 
     public static Vector3 TopLeftEnemyBorder;
     public static Vector3 BottomRightEnemyBorder;
+
+    public static void CalculateScreenDimensions ()
+    {
+        TopLeftPoint = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 0 , 1 , SceneManager.Instance.MainCamera.nearClipPlane ) );
+        BottomRightPoint = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 1 , 0 , SceneManager.Instance.MainCamera.nearClipPlane ) );
+        MidPointx = TopLeftPoint.x + ( BottomRightPoint.x - TopLeftPoint.x ) * 0.5f;
+        MidPointy = TopLeftPoint.y + ( BottomRightPoint.y - TopLeftPoint.y ) * 0.5f;
+        MidPoint = new Vector3 ( MidPointx , MidPointy , 100 );
+    }
     
     // UI
 
     public static float RemainingShotSpacing = 10;
+    public static string MainScreenContainer = "MainScreenContainer";
+    public static string MainScreen = "MainGameScreen";
+    //public static string DeathParticleExposion = "DeathExplosion";
+    public enum TouchLocation
+    {
+        Top ,
+        Right ,
+        Bottom ,
+        Left ,
+    }
 
     //particles
+    public static string ShotPrefabName;
     public static float ShotParticleVelocityMult = 200;
     public static float ShotParticleSize = 10;
     public static float ShotParticleLifetime = 10;
@@ -47,10 +67,10 @@ public class GameData
     public static string DeathParticleShot = "DeathExplosionBlue";
     public static string DeathParticleBorder = "DeathExplosionRed";
     public static string DeathParticleExposion = "DeathExplosion";
-
+    
     public enum ParticleShotType
     {
-        BasicShot ,
+        LaserShot ,
         BubbleShot
     }
 
@@ -64,37 +84,13 @@ public class GameData
     public static float CollisionRotTotal = 90f;
     public static float InvincibilityTimerMS = 3000f;
     public static float InvincibilityFlashSpeedMult = 2f;
-    
-    //background
-    public static float BackgroundDepthModifier = 40;
-    public static float BackgroundPillarYNumber = 10;
-    public enum TouchLocation
-    {
-        Top ,
-        Right ,
-        Bottom ,
-        Left ,
-    }
-
     public enum ComponentType
     {
-        MainBody,
-        Shield,
-        ParticleSystem,
+        MainBody ,
+        Shield ,
+        ParticleSystem ,
+        Item,
     }
-
-    
-    public static void CalculateScreenDimensions()
-    {
-        TopLeftPoint = SceneManager.Instance.MainCamera.ViewportToWorldPoint(new Vector3(0, 1, SceneManager.Instance.MainCamera.nearClipPlane));
-        BottomRightPoint = SceneManager.Instance.MainCamera.ViewportToWorldPoint ( new Vector3 ( 1 , 0 , SceneManager.Instance.MainCamera.nearClipPlane ) );
-        MidPointx = TopLeftPoint.x + ( BottomRightPoint.x - TopLeftPoint.x ) * 0.5f;
-        MidPointy = TopLeftPoint.y + ( BottomRightPoint.y - TopLeftPoint.y ) * 0.5f;
-        MidPoint = new Vector3(MidPointx, MidPointy, 100);
-    }
-
-    
-
     public class ShieldArrangement
     {
         //public List<TouchLocation> Top;
@@ -104,17 +100,17 @@ public class GameData
         public List<TouchLocation> Locations;
         public int Random;
 
-        public ShieldArrangement()
+        public ShieldArrangement ()
         {
             Locations = new List<TouchLocation> ();
         }
 
-        public ShieldArrangement(int [] tempDat)
+        public ShieldArrangement ( int [] tempDat )
         {
 
-            Locations = new List<TouchLocation>();
+            Locations = new List<TouchLocation> ();
 
-            for ( int i = 0; i < tempDat[0]; i++ )
+            for ( int i = 0; i < tempDat [ 0 ]; i++ )
             {
                 Locations.Add ( TouchLocation.Top );
             }
@@ -135,8 +131,7 @@ public class GameData
         }
     }
 
-    // arrangement of shields on bellow enemies, top, right, bottom, left
-
+    // arrangement of shields on below enemies, top, right, bottom, left
     public enum ObjectType
     {
         SingleShield ,
@@ -147,7 +142,7 @@ public class GameData
 
         count
     }
-    public static int[][] ShieldArray =
+    public static int [] [] ShieldArray =
     {
         new []{0,0,0,0,1},
         new []{0,1,0,1,0},
@@ -155,5 +150,21 @@ public class GameData
         new []{1,0,0,1,0},
         new []{0,1,1,0,0},
     };
+    
+    //items
+    public static float ItemPositionHeight = 50;
+    public static float ItemSize;
+    public static string ItemName;
+
+    public enum ItemTypes
+    {
+        LaserShotItem,
+        BubbleShotItem,
+    }
+
+    //background
+    public static float BackgroundDepthModifier = 40;
+    public static float BackgroundPillarYNumber = 10;
+    
 
 }

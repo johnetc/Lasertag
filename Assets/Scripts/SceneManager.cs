@@ -32,6 +32,7 @@ public class SceneManager  {
         Initiate,
         Playing ,
         Paused ,
+        Unpaused,
         GameOver ,
         Reset,
     }
@@ -51,9 +52,12 @@ public class SceneManager  {
     {
         // load object data
         GameData.CalculateScreenDimensions();
-        GameScreen.Instance.Start();
-        EnemyManager.Instance.Start();
-        BackgroundGenerator.Instance.Start();
+        GameScreen.Instance.ResizeSpawnArea();
+        
+        EnemyManager.Instance.Preload();
+        ParticleManager.Instance.Preload();
+        BackgroundGenerator.Instance.Preload();
+        ItemManager.Instance.Preload();
 
         // load ui data
         MenuMasterControl.Instance.LoadPageAssets();
@@ -62,8 +66,9 @@ public class SceneManager  {
 
         CurrentState = GameState.InGame;
         CurrentInGameState = InGameState.Initiate;
-        CurrentParticleShotType = GameData.ParticleShotType.BasicShot;
+        CurrentParticleShotType = GameData.ParticleShotType.BubbleShot;
     }
+
     
 
     public void Update ()
@@ -91,27 +96,48 @@ public class SceneManager  {
             case InGameState.Initiate:
                 GameScreen.Instance.Initiate(); 
                 EnemyManager.Instance.Initiate(); 
+                ParticleManager.Instance.Initiate();
                 BackgroundGenerator.Instance.Initiate();
+                ItemManager.Instance.Initiate();
                 ResetScores();
                 CurrentInGameState = InGameState.Playing;
                 break;
+
             case InGameState.Paused:
                 GameScreen.Instance.Pause(); 
-                EnemyManager.Instance.Pause(); 
+                EnemyManager.Instance.Pause();
+                ParticleManager.Instance.Pause();
+                ItemManager.Instance.Pause();
                 break;
+
+            case InGameState.Unpaused:
+                GameScreen.Instance.Unpaused ();
+                EnemyManager.Instance.Unpaused ();
+                ParticleManager.Instance.Unpaused();
+                ItemManager.Instance.Unpaused();
+                CurrentInGameState = InGameState.Playing;
+                break;
+
             case InGameState.Playing:
                 GameScreen.Instance.Play(); 
                 EnemyManager.Instance.Play(); 
+                ParticleManager.Instance.Play();
+                ItemManager.Instance.Play();
                 BackgroundGenerator.Instance.Play();
                 break;
+
             case InGameState.Reset:
                 GameScreen.Instance.Reset(); 
-                EnemyManager.Instance.Reset(); 
+                EnemyManager.Instance.Reset();
+                ParticleManager.Instance.Reset();
+                ItemManager.Instance.Reset();
                 ResetGame();
                 break;
+
             case InGameState.GameOver:
-                //GameScreen.Instance.GameOver(); 
-                //EnemyManager.Instance.GameOver(); 
+                GameScreen.Instance.GameOver(); 
+                EnemyManager.Instance.GameOver(); 
+                ItemManager.Instance.GameOver();
                 break;
         }
     }
