@@ -36,6 +36,7 @@ public class ParticleManager
         public Stopwatch StopW = new Stopwatch ();
         public bool Started;
         public bool ReadyForDisposal;
+        public BaseShotType BaseShotTypeClass;
     }
 
     private List<ParticleBurst> _ActiveAdvParticleBursts = new List<ParticleBurst> ();
@@ -156,6 +157,8 @@ public class ParticleManager
 
         tempBurst.ThisSystem = tempSys;
 
+        tempBurst.BaseShotTypeClass = shotClass;
+
         _NewParticle.GetComponent<ParticleColliderMono> ().ThisParticleShotType = shotClass.ShotType;
 
         _NewParticle.transform.SetParent ( ParticleContainer.transform );
@@ -168,6 +171,7 @@ public class ParticleManager
 
     public void NewShotSystemAdv ( GameData.TouchLocation loc , BaseShotType shotClass )
     {
+
         string prefabType = shotClass.ShotPrefabName;
 
         GameObject newParticle = GameObject.Instantiate ( _ParticlePrefabDict [ prefabType ] );
@@ -179,6 +183,8 @@ public class ParticleManager
         ParticleSystem tempSys = newParticle.GetComponent<ParticleSystem> ();
 
         ParticleBurst tempBurst = new ParticleBurst ();
+
+        tempBurst.BaseShotTypeClass = shotClass;
 
         tempBurst.ThisSystem = tempSys;
 
@@ -219,6 +225,7 @@ public class ParticleManager
                 }
 
         }
+
         tempSys.Emit ( tempPart [ 0 ] );
         tempBurst.TheseParticles = tempPart;
         _ActiveAdvParticleBursts.Add ( tempBurst );
@@ -254,7 +261,7 @@ public class ParticleManager
 
     public ParticleSystem.Particle [] ParticleDefiner ( Vector3 pos, Vector3 vector, BaseShotType shotClass )
     {
-        ParticleSystem.Particle [] particles = new ParticleSystem.Particle [ GameData.NumberOfParticlesPerShot ];
+        ParticleSystem.Particle [] particles = new ParticleSystem.Particle [ shotClass.NumberOfParticlesPerShot ];
 
         for ( int i = 0; i < particles.Count (); i++ )
         {
@@ -282,7 +289,7 @@ public class ParticleManager
         foreach ( var mParticleBurst in _ActiveAdvParticleBursts )
         {
             //Debug.Log(mParticleBurst.StopW.ElapsedMilliseconds);
-            if ( mParticleBurst.StopW.ElapsedMilliseconds > GameData.ParticleShotIntervalMS && mParticleBurst.LeftToFire > 0 )
+            if ( mParticleBurst.StopW.ElapsedMilliseconds > mParticleBurst.BaseShotTypeClass.ParticleShotIntervalMS && mParticleBurst.LeftToFire > 0 )
             {
                 mParticleBurst.StopW.Reset ();
                 mParticleBurst.StopW.Start ();
@@ -350,7 +357,7 @@ public class ParticleManager
             var partNo = mActiveParticleBurst.ThisSystem.GetParticles ( part );
             for ( int i = 0; i < partNo; i++ )
             {
-                if ( CheckParticleStats ( part [ i ] ) )
+                if ( CheckParticleStats ( part [ i ], mActiveParticleBurst.BaseShotTypeClass ) )
                 {
                     part [ i ].lifetime = 0;
                     mActiveParticleBurst.DeadParticles++;
@@ -360,9 +367,9 @@ public class ParticleManager
         }
     }
 
-    public bool CheckParticleStats ( ParticleSystem.Particle particle )
+    public bool CheckParticleStats ( ParticleSystem.Particle particle, BaseShotType shotClass )
     {
-        if ( particle.velocity.magnitude < GameData.ShotParticleVelocityMult )
+        if ( particle.velocity.magnitude < shotClass.ShotParticleVelocityMult )
         {
             return true;
         }

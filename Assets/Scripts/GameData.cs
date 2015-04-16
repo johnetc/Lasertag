@@ -56,13 +56,14 @@ public class GameData
     }
 
     //particles
-    public static string ShotPrefabName;
-    public static float ShotParticleVelocityMult = 200;
-    public static float ShotParticleSize = 10;
-    public static float ShotParticleLifetime = 10;
-    public static Color32 ShotParticleColour = new Color32(255,255,255,255);
-    public static int NumberOfParticlesPerShot = 1;
-    public static float ParticleShotIntervalMS = 2000;
+
+    //public static string ShotPrefabName;
+    //public static float ShotParticleVelocityMult = 200;
+    //public static float ShotParticleSize = 10;
+    //public static float ShotParticleLifetime = 10;
+    //public static Color32 ShotParticleColour = new Color32(255,255,255,255);
+    //public static int NumberOfParticlesPerShot = 1;
+    //public static float ParticleShotIntervalMS = 2000;
 
     public static string DeathParticleShot = "DeathExplosionBlue";
     public static string DeathParticleBorder = "DeathExplosionRed";
@@ -93,10 +94,6 @@ public class GameData
     }
     public class ShieldArrangement
     {
-        //public List<TouchLocation> Top;
-        //public List<TouchLocation> Bottom;
-        //public List<TouchLocation> Left;
-        //public List<TouchLocation> Right;
         public List<TouchLocation> Locations;
         public int Random;
 

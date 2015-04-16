@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Linq;
+using System.Xml.Serialization;
 using UnityEngine;
 using System.Collections;
 
@@ -24,12 +25,13 @@ public class ParticleColliderMono : MonoBehaviour
 
         int numCollisionEvents = particleSystem.GetCollisionEvents ( other , collisionEvents );
         int i = 0;
-        foreach (var particleCollisionEvent in collisionEvents)
-        {
-            
-        //}
-        //( i < numCollisionEvents )
+
+        //Debug.Log ( collisionEvents .Count());
+
+        //foreach (var particleCollisionEvent in collisionEvents)
         //{
+            
+        
             if ( other.GetComponent<Rigidbody>() )
             {
                 //Debug.Log ( "Hit from the... " + thisLocation );
@@ -49,7 +51,7 @@ public class ParticleColliderMono : MonoBehaviour
                 ////Destroy(this.gameObject);
             }
             //i++;
-        }
+        //}
         
     }
 
