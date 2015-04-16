@@ -131,7 +131,7 @@ public class ItemManager
 
     public void CheckItemPickup(int id)
     {
-        Debug.Log(id);
+        //Debug.Log(id);
         _ActiveItemDict[id].Obj.SetActive(false);
         _ActiveItemDict [ id ].ItemClass.ActivateItem();
 
