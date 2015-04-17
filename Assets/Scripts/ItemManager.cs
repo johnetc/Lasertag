@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using System.Collections;
+using Debug = UnityEngine.Debug;
 
 public class ItemManager
 {
@@ -30,11 +32,19 @@ public class ItemManager
     {
         public GameObject Obj;
         public BaseItemTypes ItemClass;
+        public float VisibleTime;
+        public Stopwatch StopWTime;
+        public Renderer MainRend;
+        public Color32 OrigColour;
 
-        public ItemInfo(GameObject obj, BaseItemTypes itemClass)
+        public ItemInfo(GameObject obj, BaseItemTypes itemClass, float visibleTime, Renderer mainRend, Color32 col)
         {
             Obj = obj;
             ItemClass = itemClass;
+            VisibleTime = visibleTime;
+            StopWTime = new Stopwatch();
+            MainRend = mainRend;
+            OrigColour = col;
         }
     }
 
@@ -50,22 +60,42 @@ public class ItemManager
 
     public void Play ()
     {
-        
+        CheckItemLife();
+        CheckItemFlash();
+        RemoveDeadItems();
     }
 
     public void Pause ()
     {
-        
+        foreach (var itemInfo in _ActiveItemDict)
+        {
+            if (itemInfo.Value.StopWTime.IsRunning)
+            {
+                Debug.Log("Stop");
+                itemInfo.Value.StopWTime.Stop();
+            }
+        }
     }
 
     public void Unpaused ()
     {
-        
+        foreach ( var itemInfo in _ActiveItemDict )
+        {
+            if ( itemInfo.Value.StopWTime.ElapsedMilliseconds>0 )
+            {
+                Debug.Log ( "Start" );
+                itemInfo.Value.StopWTime.Start();
+            }
+        }
     }
 
     public void GameOver()
     {
-        
+        foreach (var itemInfo in _ActiveItemDict)
+        {
+            itemInfo.Value.Obj.SetActive(false);
+        }
+        RemoveDeadItems();
     }
 
     public void Reset()
@@ -114,6 +144,12 @@ public class ItemManager
                 
             }
             break;
+            case GameData.ItemTypes.SpreadShotItem:
+            {
+                tempItemClass = new SpreadShotItem();
+
+            }
+            break;
         }
 
         GameObject tempObj = GameObject.Instantiate(_ItemPrefabDict[tempItemClass.ItemName], pos, Quaternion.identity) as GameObject;
@@ -123,10 +159,64 @@ public class ItemManager
         tempObj.transform.SetParent(_ItemContainer.transform);
         tempObj.transform.localScale = new Vector3(tempItemClass.ItemSize,tempItemClass.ItemSize,tempItemClass.ItemSize );
 
-        ItemInfo tempItemInfo = new ItemInfo(tempObj, tempItemClass);
+        ItemInfo tempItemInfo = new ItemInfo ( tempObj , tempItemClass , tempItemClass.VisibleTimeMS , tempObj.GetComponent<Renderer> () , tempObj.GetComponent<Renderer> ().material.color );
+        tempItemInfo.StopWTime.Start();
+
         _ActiveItemDict.Add ( _CurrentItemNumber , tempItemInfo );
 
         _CurrentItemNumber++;
+    }
+
+    private void CheckItemLife()
+    {
+        foreach (var itemInfo in _ActiveItemDict)
+        {
+            if (itemInfo.Value.StopWTime.ElapsedMilliseconds > itemInfo.Value.VisibleTime)
+            {
+                itemInfo.Value.Obj.SetActive ( false );
+            }
+        }
+    }
+
+    private void CheckItemFlash()
+    {
+        foreach ( var itemInfo in _ActiveItemDict )
+        {
+            if ( itemInfo.Value.StopWTime.IsRunning )
+            {
+                itemInfo.Value.MainRend.material.color = new Color ( itemInfo.Value.OrigColour.r ,
+                    itemInfo.Value.OrigColour.g ,
+                    itemInfo.Value.OrigColour.b ,
+                    Mathf.PingPong ( Time.time * GameData.InvincibilityFlashSpeedMult , 0.5f ) );
+               
+            }
+
+        }
+    }
+
+    private void RemoveDeadItems()
+    {
+        //Debug.Log ( "start" + _ActiveItemDict.Count );
+        
+        Dictionary<int, ItemInfo> tempdict = new Dictionary<int, ItemInfo>();
+
+        foreach (var itemInfo in _ActiveItemDict)
+        {
+            if (itemInfo.Value.Obj.gameObject.activeInHierarchy)
+            {
+                tempdict.Add(itemInfo.Key, itemInfo.Value);
+            }
+            else
+            {
+                Object.Destroy ( itemInfo.Value.Obj );
+            }
+        }
+
+        _ActiveItemDict = new Dictionary<int, ItemInfo>();
+
+        _ActiveItemDict = tempdict;
+        
+        //Debug.Log("end"+_ActiveItemDict.Count);
     }
 
     public void CheckItemPickup(int id)

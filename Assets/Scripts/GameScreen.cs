@@ -80,14 +80,14 @@ public class GameScreen  {
 
     public void Reset ()
     {
-        Debug.Log("screen reset");
+        Debug.Log ( "screen reset" );
         LoadActiveScreenPositions ();
         ResetUI ();
     }
 
     public void GameOver ()
     {
-        Debug.Log ( "screen game over" );
+        //Debug.Log ( "screen game over" );
         m_UIButtonDict["ResetButton"].gameObject.SetActive(true);
 
     }
@@ -301,7 +301,7 @@ public class GameScreen  {
         {
             case "ResetButton":
             {
-                SceneManager.Instance.ResetGame();
+                SceneManager.Instance.CurrentInGameState = SceneManager.InGameState.Reset;
             }
             break;
 

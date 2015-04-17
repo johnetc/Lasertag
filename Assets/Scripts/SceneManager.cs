@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Reflection;
+using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
 
@@ -46,6 +48,7 @@ public class SceneManager  {
     public void Awake ()
     {
         TheEventSystem = GameObject.FindObjectOfType<EventSystem>();
+        //CreateClassList();
     }
 
     public void Start ()
@@ -69,8 +72,6 @@ public class SceneManager  {
         CurrentParticleShotType = GameData.ParticleShotType.BubbleShot;
     }
 
-    
-
     public void Update ()
     {
         MenuMasterControl.Instance.Update();
@@ -86,6 +87,18 @@ public class SceneManager  {
         }
 
         
+    }
+
+    public void CreateClassList()
+    {
+        Assembly myAssembly = Assembly.GetExecutingAssembly ();
+        foreach ( Type type in myAssembly.GetTypes () )
+        {
+            if (type.IsSubclassOf(typeof(BaseShotType)))
+            {
+                Debug.Log(type.FullName);
+            };
+        }
     }
 
     public void CheckInGameState()
@@ -159,14 +172,8 @@ public class SceneManager  {
         if ( GameData.CurrentLives < 1 )
         {
             CurrentInGameState = InGameState.GameOver;
-            GameOver();
+            
         }
-    }
-
-    public void GameOver()
-    {
-        GameScreen.Instance.GameOver();
-        EnemyManager.Instance.GameOver();
     }
 
     public void ResetGame ()

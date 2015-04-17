@@ -8,7 +8,7 @@ public class GameData
 {
     //player game variables
     public static int StartScore = 0;
-    public static int StartLives = 500;
+    public static int StartLives = 5;
     public static int CurrentScore = 0;
     public static int CurrentLives = 0;
 
@@ -68,12 +68,16 @@ public class GameData
     public static string DeathParticleShot = "DeathExplosionBlue";
     public static string DeathParticleBorder = "DeathExplosionRed";
     public static string DeathParticleExposion = "DeathExplosion";
-    
+
     public enum ParticleShotType
     {
+        BubbleShot ,
+
         LaserShot ,
-        BubbleShot
+        SpreadShot
     }
+
+
 
     //enemies
     public static float MaxEnemyObjects = 7;
@@ -155,8 +159,10 @@ public class GameData
 
     public enum ItemTypes
     {
+        BubbleShotItem ,
+
         LaserShotItem,
-        BubbleShotItem,
+        SpreadShotItem,
     }
 
     //background

@@ -515,7 +515,7 @@ public class EnemyManager {
                 SceneManager.Instance.ModifyScore(1);
                 EnemyObjects[id].IsDead = true;
                 ParticleManager.Instance.FireDeathExplosion ( EnemyObjects [ id ].ThisObject.transform.position , GameData.DeathParticleShot );
-                int temp = Random.Range(0, 2);
+                int temp = Random.Range(0, 3);
                 ItemManager.Instance.CreateItem((GameData.ItemTypes)temp, EnemyObjects[id].ThisObject.transform.position);
                 return true;
             }

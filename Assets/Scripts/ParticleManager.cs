@@ -115,58 +115,87 @@ public class ParticleManager
                 NewShotSystemAdv(loc, CurrentShotClass);
             }
             break;
+            case GameData.ParticleShotType.SpreadShot:
+            {
+                CurrentShotClass = new SpreadShot();
+                NewShotSystemBasic( loc , CurrentShotClass );
+            }
+            break;
         }
     }
 
     public void NewShotSystemBasic ( GameData.TouchLocation loc, BaseShotType shotClass )
     {
         string prefabType = shotClass.ShotPrefabName;
-        
-        switch ( loc )
-        {
-            case GameData.TouchLocation.Left:
-                {
-                    _NewParticle = GameObject.Instantiate ( _ParticlePrefabDict [ "Left" + prefabType ] );
-                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Left;
-                    break;
-                }
-            case GameData.TouchLocation.Right:
-                {
-                    _NewParticle = GameObject.Instantiate ( _ParticlePrefabDict [ "Right" + prefabType ] );
-                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Right;
-                    break;
-                }
-            case GameData.TouchLocation.Top:
-                {
-                    _NewParticle = GameObject.Instantiate ( _ParticlePrefabDict [ "Top" + prefabType ] );
-                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Top;
-                    break;
-                }
-            case GameData.TouchLocation.Bottom:
-                {
-                    _NewParticle = GameObject.Instantiate ( _ParticlePrefabDict [ "Bottom" + prefabType ] );
-                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Bottom;
-                    break;
-                }
 
+        float initialAngleOfShot = 0;
+        float shotAngleIncrement = 0;
+
+        if (shotClass.ShotField != 0)
+        {
+            initialAngleOfShot = -(shotClass.ShotField*0.5f);
+            shotAngleIncrement = shotClass.ShotField/(shotClass.NumberOfPrefabsPerShot - 1);
+            Debug.Log(initialAngleOfShot + " increment " + shotAngleIncrement);
         }
 
-        ParticleSystem tempSys = _NewParticle.GetComponent<ParticleSystem> ();
+        for (int i = 0; i < shotClass.NumberOfPrefabsPerShot; i++)
+        {
+            float shotAngleModifier = 0;
 
-        ParticleBurst tempBurst = new ParticleBurst ();
+            if (shotClass.ShotField != null)
+            {
+                shotAngleModifier = initialAngleOfShot + (i*shotAngleIncrement);
+            }
 
-        tempBurst.ThisSystem = tempSys;
+            _NewParticle = GameObject.Instantiate(_ParticlePrefabDict[prefabType]);
 
-        tempBurst.BaseShotTypeClass = shotClass;
+            switch (loc)
+            {
+                case GameData.TouchLocation.Left:
+                {
+                    _NewParticle.transform.eulerAngles = new Vector3 ( 0 , 0 , 0 + shotAngleModifier );
+                    _NewParticle.GetComponent<ParticleColliderMono>().thisLocation = GameData.TouchLocation.Left;
+                    break;
+                }
+                case GameData.TouchLocation.Right:
+                {
+                    _NewParticle.transform.eulerAngles = new Vector3(0, 0, 180+shotAngleModifier);
+                    _NewParticle.GetComponent<ParticleColliderMono>().thisLocation = GameData.TouchLocation.Right;
+                    break;
+                }
+                case GameData.TouchLocation.Top:
+                {
+                    _NewParticle.transform.eulerAngles = new Vector3 ( 0 , 0 , 270 + shotAngleModifier );
+                    _NewParticle.GetComponent<ParticleColliderMono>().thisLocation = GameData.TouchLocation.Top;
+                    break;
+                }
+                case GameData.TouchLocation.Bottom:
+                {
+                    _NewParticle.transform.eulerAngles = new Vector3 ( 0 , 0 , 90 + shotAngleModifier );
+                    _NewParticle.GetComponent<ParticleColliderMono>().thisLocation = GameData.TouchLocation.Bottom;
+                    break;
+                }
 
-        _NewParticle.GetComponent<ParticleColliderMono> ().ThisParticleShotType = shotClass.ShotType;
+            }
 
-        _NewParticle.transform.SetParent ( ParticleContainer.transform );
+            ParticleSystem tempSys = _NewParticle.GetComponent<ParticleSystem>();
 
-        _NewParticle.transform.position = SceneManager.Instance.MainCamera.ScreenToWorldPoint ( new Vector3 ( Input.mousePosition.x , Input.mousePosition.y , 100 ) );
+            ParticleBurst tempBurst = new ParticleBurst();
 
-        _ActiveBasicParticleBursts.Add(tempBurst);
+            tempBurst.ThisSystem = tempSys;
 
+            tempBurst.BaseShotTypeClass = shotClass;
+
+            _NewParticle.GetComponent<ParticleColliderMono>().ThisParticleShotType = shotClass.ShotType;
+
+            _NewParticle.transform.SetParent(ParticleContainer.transform);
+
+            _NewParticle.transform.position =
+                SceneManager.Instance.MainCamera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x,
+                    Input.mousePosition.y, 100));
+
+            _ActiveBasicParticleBursts.Add(tempBurst);
+        }
     }
 
     public void NewShotSystemAdv ( GameData.TouchLocation loc , BaseShotType shotClass )
@@ -174,13 +203,15 @@ public class ParticleManager
 
         string prefabType = shotClass.ShotPrefabName;
 
-        GameObject newParticle = GameObject.Instantiate ( _ParticlePrefabDict [ prefabType ] );
+        _NewParticle = GameObject.Instantiate ( _ParticlePrefabDict [ prefabType ] );
 
-        newParticle.transform.SetParent ( ParticleContainer.transform );
+        _NewParticle.GetComponent<ParticleColliderMono> ().ThisParticleShotType = shotClass.ShotType;
 
-        newParticle.transform.position = SceneManager.Instance.MainCamera.ScreenToWorldPoint ( new Vector3 ( Input.mousePosition.x , Input.mousePosition.y , 100 ) );
+        _NewParticle.transform.SetParent ( ParticleContainer.transform );
 
-        ParticleSystem tempSys = newParticle.GetComponent<ParticleSystem> ();
+        _NewParticle.transform.position = SceneManager.Instance.MainCamera.ScreenToWorldPoint ( new Vector3 ( Input.mousePosition.x , Input.mousePosition.y , 100 ) );
+
+        ParticleSystem tempSys = _NewParticle.GetComponent<ParticleSystem> ();
 
         ParticleBurst tempBurst = new ParticleBurst ();
 
@@ -199,28 +230,28 @@ public class ParticleManager
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.right, shotClass );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Left;
+                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Left;
                     break;
                 }
             case GameData.TouchLocation.Right:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.left , shotClass );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Right;
+                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Right;
                     break;
                 }
             case GameData.TouchLocation.Top:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.down , shotClass );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Top;
+                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Top;
                     break;
                 }
             case GameData.TouchLocation.Bottom:
                 {
                     tempPart = ParticleDefiner ( tempSys.transform.position , Vector3.up , shotClass );
 
-                    newParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Bottom;
+                    _NewParticle.GetComponent<ParticleColliderMono> ().thisLocation = GameData.TouchLocation.Bottom;
                     break;
                 }
 
@@ -440,6 +471,19 @@ public class ParticleManager
 
     public void Reset()
     {
+        foreach (var activeAdvParticleBurst in _ActiveAdvParticleBursts)
+        {
+            Object.Destroy ( activeAdvParticleBurst.ThisSystem.gameObject );
+        }
+        foreach (var activeBasicParticleBurst in _ActiveBasicParticleBursts)
+        {
+            Object.Destroy ( activeBasicParticleBurst.ThisSystem.gameObject );
+        }
+        foreach (var particleBurst in _DeathExplosionsList)
+        {
+            Object.Destroy(particleBurst.ThisSystem.gameObject);
+        }
+        
         _ActiveAdvParticleBursts = new List<ParticleBurst> ();
         _ActiveBasicParticleBursts = new List<ParticleBurst> ();
         _DeathExplosionsList = new List<ParticleBurst> ();
